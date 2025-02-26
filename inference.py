@@ -95,6 +95,8 @@ def main(config, prompt: str = None, **kwargs):
     response, history = model_downstream.chat(tokenizer, traffic_prompt, history=[])
     print(response)
 
+    ## hello
+
 
 if __name__ == "__main__":
     fire.Fire(main)
