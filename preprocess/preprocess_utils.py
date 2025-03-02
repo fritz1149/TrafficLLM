@@ -3,6 +3,7 @@ from packet_data_preprocess import build_packet_data
 import random
 import json
 import os
+from tqdm import tqdm
 
 
 MAX_SAMPLING_NUMBER = 100  # 5000 # number of samples per class
@@ -44,7 +45,7 @@ def build_dataset(args, path, file):
     build_data = []
     files_path = os.path.join(path, file)
     pcaps = os.listdir(files_path)
-    for pcap in pcaps:
+    for pcap in tqdm(pcaps):
         if args.granularity == "flow":
             pcap_data = build_flow_data(os.path.join(files_path, pcap))
         else:
@@ -64,7 +65,15 @@ def save_dataset(args, train_dataset, test_dataset):
 
 def build_td_text_dataset(traffic_data, first_label=None, second_label=None, task_name=None, granularity=None):
     """Building the text datasets of traffic detection task"""
-    if task_name == "EMD":
+    
+    if task_name == "MBD": # Mobile Behavior Detection
+        instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
+                       "traffic features, and payloads. Please conduct the MOBILE BEHAVIOR DETECTION TASK to determine " \
+                       "which type of mobile behavior the traffic belongs to. The categories " \
+                       "include 'sendText, sendAudio, sendImage, shareLocationOnce, transferFile'."
+        output = second_label
+        
+    elif task_name == "EMD":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
                       "traffic features, and payloads. Please conduct the ENCRYPTED MALWARE DETECTION TASK to determine " \
                       "which application category the encrypted beign or malicious traffic belongs to. The categories " \

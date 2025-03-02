@@ -103,7 +103,9 @@ def main():
     traffic_task = args.traffic_task
 
     if traffic_task == "detection":
-        if args.dataset_name == "ustc-tfc-2016":
+        if args.dataset_name.startswith('changc'):
+            traffic_detection_preprocess(args, detection_task="MBD")
+        elif args.dataset_name == "ustc-tfc-2016":
             # ustc_tfc2016_preprocess(args, detection_task="EMD")
             traffic_detection_preprocess(args, detection_task="EMD")
         elif args.dataset_name == "iscx-botnet":

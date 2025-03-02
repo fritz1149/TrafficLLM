@@ -3,17 +3,19 @@ LR=2e-2
 NUM_GPUS=1
 export CUDA_VISIBLE_DEVICES=1
 
+conda activate trafficllm
+
 torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
     --do_train \
-    --train_file ../datasets/ustc-tfc-2016/ustc-tfc-2016_detection_packet_train.json \
-    --validation_file ../datasets/ustc-tfc-2016/ustc-tfc-2016_detection_packet_train.json \
+    --train_file ../datasets/changc-qq-2025/changc-qq-2025_detection_packet_train.json \
+    --validation_file ../datasets/changc-qq-2025/changc-qq-2025_detection_packet_test.json \
     --preprocessing_num_workers 10 \
     --prompt_column instruction \
     --response_column output \
     --overwrite_cache \
     --cache_dir ../cache \
     --model_name_or_path ../models/chatglm2/chatglm2-6b \
-    --output_dir ../models/chatglm2/peft/ustc-tfc-2016-detection-packet \
+    --output_dir ../models/chatglm2/peft/changc-qq-2025 \
     --overwrite_output_dir \
     --max_source_length 1024 \
     --max_target_length 32 \
