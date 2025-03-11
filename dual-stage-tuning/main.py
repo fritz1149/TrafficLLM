@@ -47,7 +47,7 @@ from arguments import ModelArguments, DataTrainingArguments
 logger = logging.getLogger(__name__)
 
 # ptuning should mask this line
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4"
 
 def main():

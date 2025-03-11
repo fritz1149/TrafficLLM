@@ -2,20 +2,25 @@ PRE_SEQ_LEN=128
 LR=2e-2
 NUM_GPUS=1
 export CUDA_VISIBLE_DEVICES=1
+time=$(date +"%Y%m%d%H%M%S")
+dataset_name=weixin
+sample_num=1000
+model=chatglm2-6b
+granularity=packet
 
 conda activate trafficllm
 
-torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
+nohup torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
     --do_train \
-    --train_file ../datasets/changc-qq-2025/changc-qq-2025_detection_packet_train.json \
-    --validation_file ../datasets/changc-qq-2025/changc-qq-2025_detection_packet_test.json \
+    --train_file ../datasets/changc-${dataset_name}-2025/$sample_num/changc-${dataset_name}-2025_detection_${granularity}_train.json \
+    --validation_file ../datasets/changc-${dataset_name}-2025/$sample_num/changc-${dataset_name}-2025_detection_${granularity}_test.json \
     --preprocessing_num_workers 10 \
     --prompt_column instruction \
     --response_column output \
     --overwrite_cache \
     --cache_dir ../cache \
-    --model_name_or_path ../models/chatglm2/chatglm2-6b \
-    --output_dir ../models/chatglm2/peft/changc-qq-2025 \
+    --model_name_or_path ~/changc/$model \
+    --output_dir ../models/$model/changc-${dataset_name}-2025 \
     --overwrite_output_dir \
     --max_source_length 1024 \
     --max_target_length 32 \
@@ -27,4 +32,5 @@ torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
     --logging_steps 10 \
     --save_steps 4000 \
     --learning_rate $LR \
-    --pre_seq_len $PRE_SEQ_LEN
+    --pre_seq_len $PRE_SEQ_LEN \
+    > ../logs/train/$time-$$.txt 2>&1 &

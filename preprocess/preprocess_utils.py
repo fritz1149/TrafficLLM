@@ -6,7 +6,7 @@ import os
 from tqdm import tqdm
 
 
-MAX_SAMPLING_NUMBER = 100  # 5000 # number of samples per class
+MAX_SAMPLING_NUMBER = 1000  # 5000 # number of samples per class
 TRAINING_SAMPLE_RATIO = 0.95
 
 
