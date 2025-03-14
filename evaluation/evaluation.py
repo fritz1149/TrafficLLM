@@ -9,8 +9,7 @@ import sys
 import json
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 def test_set_to_prompt(test_set):
 
@@ -117,8 +116,8 @@ def main(model_name,
     model = model.eval()
 
     test_prompts, target_responses = test_set_to_prompt(test_set)
-    test_prompts = test_prompts[:1000]
-    target_responses = target_responses[:1000]
+    test_prompts = test_prompts
+    target_responses = target_responses
 
     predict_responses = []
 

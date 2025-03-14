@@ -4,23 +4,23 @@ NUM_GPUS=1
 export CUDA_VISIBLE_DEVICES=1
 time=$(date +"%Y%m%d%H%M%S")
 dataset_name=weixin
-sample_num=1000
+sample_num=8000
 model=chatglm2-6b
 granularity=packet
-
-conda activate trafficllm
+sampling_method=average_sampling
+export PY_ENV='chatglm'
 
 nohup torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
     --do_train \
-    --train_file ../datasets/changc-${dataset_name}-2025/$sample_num/changc-${dataset_name}-2025_detection_${granularity}_train.json \
-    --validation_file ../datasets/changc-${dataset_name}-2025/$sample_num/changc-${dataset_name}-2025_detection_${granularity}_test.json \
+    --train_file ../datasets/changc-${dataset_name}-2025/${sampling_method}-${sample_num}/changc-${dataset_name}-2025_detection_${granularity}_train.json \
+    --validation_file ../datasets/changc-${dataset_name}-2025/${sampling_method}-${sample_num}/changc-${dataset_name}-2025_detection_${granularity}_test.json \
     --preprocessing_num_workers 10 \
     --prompt_column instruction \
     --response_column output \
     --overwrite_cache \
     --cache_dir ../cache \
     --model_name_or_path ~/changc/$model \
-    --output_dir ../models/$model/changc-${dataset_name}-2025 \
+    --output_dir ../models/$model/changc-${dataset_name}-2025/${sampling_method}-${sample_num} \
     --overwrite_output_dir \
     --max_source_length 1024 \
     --max_target_length 32 \
@@ -28,9 +28,10 @@ nohup torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 16 \
     --predict_with_generate \
-    --max_steps 20000 \
+    --max_steps 12000 \
     --logging_steps 10 \
     --save_steps 4000 \
     --learning_rate $LR \
     --pre_seq_len $PRE_SEQ_LEN \
+    --model_base chatglm \
     > ../logs/train/$time-$$.txt 2>&1 &

@@ -4,20 +4,21 @@ import random
 import json
 import os
 from tqdm import tqdm
+import math
 
-
-MAX_SAMPLING_NUMBER = 1000  # 5000 # number of samples per class
 TRAINING_SAMPLE_RATIO = 0.95
 
 
-def split_dataset(build_data, sampling=True):
+def split_dataset(build_data, max_sampling_number, sampling=True):
+    print(len(build_data))
     random.shuffle(build_data)
     if sampling is True:
-        train_nb = int(min(MAX_SAMPLING_NUMBER, len(build_data)) * TRAINING_SAMPLE_RATIO)
-        test_nb = int(min(MAX_SAMPLING_NUMBER, len(build_data)) * (1 - TRAINING_SAMPLE_RATIO))
+        train_nb = int(min(max_sampling_number, len(build_data)) * TRAINING_SAMPLE_RATIO)
+        test_nb = int(min(max_sampling_number, len(build_data)) * (1 - TRAINING_SAMPLE_RATIO))
     else:
         train_nb = int(len(build_data) * TRAINING_SAMPLE_RATIO)
         test_nb = int(len(build_data) * (1 - TRAINING_SAMPLE_RATIO))
+
     train_data = build_data[:train_nb]
     test_data = build_data[train_nb:train_nb + test_nb]
 
@@ -26,6 +27,7 @@ def split_dataset(build_data, sampling=True):
 
 def write_dataset(dataset, output_path):
     random.shuffle(dataset)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as fin:
         for data in dataset:
             json.dump(data, fin)
@@ -41,18 +43,21 @@ def write_labels(labels, output_path):
         json.dump(label_dict, fin, indent=4, separators=(',', ': '))
 
 
-def build_dataset(args, path, file):
+def build_dataset(args, path, file, sampling_method):
     build_data = []
     files_path = os.path.join(path, file)
     pcaps = os.listdir(files_path)
+    samples_per_pcap = -1
+    if sampling_method == "average_sampling":
+        samples_per_pcap = math.ceil(args.max_sampling_number / len(pcaps))
     for pcap in tqdm(pcaps):
         if args.granularity == "flow":
             pcap_data = build_flow_data(os.path.join(files_path, pcap))
         else:
-            pcap_data = build_packet_data(os.path.join(files_path, pcap))
+            pcap_data = build_packet_data(os.path.join(files_path, pcap), samples_per_pcap=samples_per_pcap)
         build_data.extend(pcap_data)
 
-    train_data, test_data = split_dataset(build_data)
+    train_data, test_data = split_dataset(build_data=build_data, max_sampling_number=args.max_sampling_number)
     return train_data, test_data
 
 

@@ -4,7 +4,7 @@ import scapy.all as scapy
 from scapy.all import load_layer
 import re
 import os
-
+import random
 
 # load_layer("tls")
 
@@ -12,7 +12,7 @@ MAX_PACKET_LENGTH = 1024
 HEX_PACKET_START_INDEX = 0  # 0 # 48 # 76
 
 
-def build_packet_data(pcap_file, packet_feature="traffic words"):
+def build_packet_data(pcap_file, packet_feature="traffic words", samples_per_pcap = -1):
     build_data = []
 
     if packet_feature == "generation 5tuple":
@@ -87,7 +87,8 @@ def build_packet_data(pcap_file, packet_feature="traffic words"):
             build_data.append(packet_data)
 
     elif packet_feature == "traffic words":
-        tmp_path = "tmp1.txt"
+        # tmp_path = "tmp1.txt"
+        tmp_path = f"../tmp/tmp-{os.getpid()}.txt"
 
         # tshark 3.6.16
         # fields = ["frame.encap_type", "frame.time", "frame.offset_shift", "frame.time_epoch", "frame.time_delta",
@@ -141,6 +142,10 @@ def build_packet_data(pcap_file, packet_feature="traffic words"):
                 packet_data += field + ": " + value
 
             build_data.append(packet_data)
+
+        if samples_per_pcap > 0:
+            build_data = random.sample(build_data, samples_per_pcap)
+        # print(len(build_data))
 
     return build_data
 

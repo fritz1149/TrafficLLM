@@ -59,6 +59,9 @@ class ModelArguments:
     prefix_projection: bool = field(
         default=False
     )
+    model_base: str = field(
+        default=None
+    )
 
 
 @dataclass

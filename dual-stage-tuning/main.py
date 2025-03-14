@@ -46,10 +46,6 @@ from arguments import ModelArguments, DataTrainingArguments
 
 logger = logging.getLogger(__name__)
 
-# ptuning should mask this line
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4"
-
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
@@ -106,26 +102,30 @@ def main():
         cache_dir=model_args.cache_dir,
         # use_auth_token=True if model_args.use_auth_token else None,
     )
-
     # Load pretrained model and tokenizer
     config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
     config.pre_seq_len = model_args.pre_seq_len
     config.prefix_projection = model_args.prefix_projection
 
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+    model = AutoModel.from_pretrained(model_args.model_name_or_path, config=config, trust_remote_code=True)
+    if model_args.model_base == 'qwen':
+        from peft import PrefixTuningConfig, get_peft_model, TaskType
+        config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=10)
+        model = get_peft_model(model, config)
 
     if model_args.ptuning_checkpoint is not None:
         # Evaluation
         # Loading extra state dict of prefix encoder
-        model = AutoModel.from_pretrained(model_args.model_name_or_path, config=config, trust_remote_code=True)
         prefix_state_dict = torch.load(os.path.join(model_args.ptuning_checkpoint, "pytorch_model.bin"))
         new_prefix_state_dict = {}
         for k, v in prefix_state_dict.items():
             if k.startswith("transformer.prefix_encoder."):
                 new_prefix_state_dict[k[len("transformer.prefix_encoder."):]] = v
-        model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
-    else:
-        model = AutoModel.from_pretrained(model_args.model_name_or_path, config=config, trust_remote_code=True)
+        if not model_args.model_base == 'qwen':
+            model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
+        else:
+            model.prompt_encoder.default.load_state_dict(new_prefix_state_dict)
 
     if model_args.quantization_bit is not None:
         print(f"Quantized to {model_args.quantization_bit} bit")
@@ -133,7 +133,10 @@ def main():
     if model_args.pre_seq_len is not None:
         # P-tuning v2
         model = model.half()
-        model.transformer.prefix_encoder.float()
+        if not model_args.model_base == 'qwen':
+            model.transformer.prefix_encoder.float()
+        else:
+            model.prompt_encoder.default.float()
     else:
         # Finetune
         model = model.float()
@@ -184,36 +187,63 @@ def main():
 
     def preprocess_function_train(examples):
         max_seq_length = data_args.max_source_length + data_args.max_target_length + 1
+        
+        if model_args.model_base == 'qwen':
+            model_inputs = {
+                "input_ids": [],
+                "attention_mask": [],
+                "labels": [],
+            }
+        else:
+            model_inputs = {
+                "input_ids": [],
+                "labels": [],
+            }
+        if model_args.model_base == 'qwen':
+            for i in range(len(examples[prompt_column])):
+                if examples[prompt_column][i] and examples[response_column][i]:
+                    query, answer = examples[prompt_column][i], examples[response_column][i]
+                    prompt = f"[Round 1]\n\n问：{query}\n\n答："
+                    prompt = prefix + prompt
+                    instruction = tokenizer(prompt)
+                    response = tokenizer(answer + tokenizer.eos_token)
+                    input_ids = instruction["input_ids"] + response["input_ids"]
+                    attention_mask = instruction["attention_mask"] + response["attention_mask"]
+                    labels = [-100] * len(instruction["input_ids"]) + response["input_ids"]
+                    if len(input_ids) > data_args.max_source_length:
+                        input_ids = input_ids[:data_args.max_source_length]
+                        attention_mask = attention_mask[:data_args.max_source_length]
+                        labels = labels[:data_args.max_source_length]
+                    model_inputs["input_ids"].append(input_ids)
+                    model_inputs["labels"].append(labels)
+                    model_inputs["attention_mask"].append(attention_mask)
+        elif model_args.model_base == 'chatglm':
+            for i in range(len(examples[prompt_column])):
+                if examples[prompt_column][i] and examples[response_column][i]:
+                    query, answer = examples[prompt_column][i], examples[response_column][i]
 
-        model_inputs = {
-            "input_ids": [],
-            "labels": [],
-        }
-        for i in range(len(examples[prompt_column])):
-            if examples[prompt_column][i] and examples[response_column][i]:
-                query, answer = examples[prompt_column][i], examples[response_column][i]
+                    history = examples[history_column][i] if history_column is not None else None
+                    prompt = tokenizer.build_prompt(query, history)
 
-                history = examples[history_column][i] if history_column is not None else None
-                prompt = tokenizer.build_prompt(query, history)
+                    prompt = prefix + prompt
+                    a_ids = tokenizer.encode(text=prompt, add_special_tokens=True, truncation=True,
+                                            max_length=data_args.max_source_length)
+                    b_ids = tokenizer.encode(text=answer, add_special_tokens=False, truncation=True,
+                                            max_length=data_args.max_target_length)
 
-                prompt = prefix + prompt
-                a_ids = tokenizer.encode(text=prompt, add_special_tokens=True, truncation=True,
-                                         max_length=data_args.max_source_length)
-                b_ids = tokenizer.encode(text=answer, add_special_tokens=False, truncation=True,
-                                         max_length=data_args.max_target_length)
+                    context_length = len(a_ids)
+                    input_ids = a_ids + b_ids + [tokenizer.eos_token_id]
+                    labels = [tokenizer.pad_token_id] * context_length + b_ids + [tokenizer.eos_token_id]
+                    
+                    pad_len = max_seq_length - len(input_ids)
+                    input_ids = input_ids + [tokenizer.pad_token_id] * pad_len
+                    labels = labels + [tokenizer.pad_token_id] * pad_len
+                    if data_args.ignore_pad_token_for_loss:
+                        labels = [(l if l != tokenizer.pad_token_id else -100) for l in labels]
 
-                context_length = len(a_ids)
-                input_ids = a_ids + b_ids + [tokenizer.eos_token_id]
-                labels = [tokenizer.pad_token_id] * context_length + b_ids + [tokenizer.eos_token_id]
-                
-                pad_len = max_seq_length - len(input_ids)
-                input_ids = input_ids + [tokenizer.pad_token_id] * pad_len
-                labels = labels + [tokenizer.pad_token_id] * pad_len
-                if data_args.ignore_pad_token_for_loss:
-                    labels = [(l if l != tokenizer.pad_token_id else -100) for l in labels]
-
-                model_inputs["input_ids"].append(input_ids)
-                model_inputs["labels"].append(labels)
+                    model_inputs["input_ids"].append(input_ids)
+                    model_inputs["labels"].append(labels)
+        
 
         return model_inputs
     
@@ -239,7 +269,7 @@ def main():
                 load_from_cache_file=not data_args.overwrite_cache,
                 desc="Running tokenizer on train dataset",
             )
-        print_dataset_example(train_dataset[0])
+        # print_dataset_example(train_dataset[0])
 
     if training_args.do_eval:
         max_target_length = data_args.val_max_target_length
@@ -286,7 +316,7 @@ def main():
         model=model,
         label_pad_token_id=label_pad_token_id,
         pad_to_multiple_of=None,
-        padding=False
+        padding=False if model_args.base_model != "qwen" else True
     )
 
     # Metric

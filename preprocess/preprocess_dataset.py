@@ -21,6 +21,8 @@ def get_args():
     parser.add_argument("--granularity", type=str, help="processing granularity", required=True, choices=["flow", "packet"])
     parser.add_argument("--output_path", type=str, help="output dataset path", required=True)
     parser.add_argument("--output_name", type=str, help="output dataset name", required=True)
+    parser.add_argument("--sampling_method", type=str, help="sampling_method", required=True)
+    parser.add_argument("--max_sampling_number", type=int, help="max_sampling_number", required=True)
 
     args = parser.parse_args()
     return args
@@ -36,7 +38,7 @@ def traffic_detection_preprocess(args, detection_task):
     labels.extend(files)
 
     for file in tqdm(files):
-        train_data, test_data = build_dataset(args, args.input, file)
+        train_data, test_data = build_dataset(args, args.input, file, sampling_method=args.sampling_method)
 
         train_text_data = build_td_text_dataset(train_data, second_label=file, task_name=detection_task, granularity=args.granularity)
         test_text_data = build_td_text_dataset(test_data, second_label=file, task_name=detection_task, granularity=args.granularity)

@@ -1,0 +1,39 @@
+PRE_SEQ_LEN=128
+LR=2e-2
+NUM_GPUS=1
+export CUDA_VISIBLE_DEVICES=0
+time=$(date +"%Y%m%d%H%M%S")
+dataset_name0=qq
+dataset_name1=weixin
+sample_num0=5000
+sample_num1=100
+checkpoint0=12000
+model=chatglm2-6b
+granularity=packet
+export PY_ENV='chatglm'
+
+nohup torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
+    --do_train \
+    --train_file ../datasets/changc-${dataset_name1}-2025/$sample_num1/changc-${dataset_name1}-2025_detection_${granularity}_train.json \
+    --validation_file ../datasets/changc-${dataset_name1}-2025/$sample_num1/changc-${dataset_name1}-2025_detection_${granularity}_test.json \
+    --preprocessing_num_workers 10 \
+    --prompt_column instruction \
+    --response_column output \
+    --overwrite_cache \
+    --cache_dir ../cache \
+    --model_name_or_path ~/changc/$model \
+    --output_dir ../models/$model/changc-${dataset_name0}-${sample_num0}-${dataset_name1}-${sample_num1}-2025/$sample_num \
+    --ptuning_checkpoint ../models/$model/changc-${dataset_name0}-2025/$sample_num0/$checkpoint0 \
+    --overwrite_output_dir \
+    --max_source_length 1024 \
+    --max_target_length 32 \
+    --per_device_train_batch_size 1 \
+    --per_device_eval_batch_size 1 \
+    --gradient_accumulation_steps 16 \
+    --predict_with_generate \
+    --max_steps 20000 \
+    --logging_steps 10 \
+    --save_steps 4000 \
+    --learning_rate $LR \
+    --pre_seq_len $PRE_SEQ_LEN \
+    > ../logs/train/$time-$$.txt 2>&1 &
