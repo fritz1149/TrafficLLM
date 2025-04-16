@@ -1,0 +1,13 @@
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0  13840  6736 ?        Ss   09:01   0:00 sudo --preserve-env --set-home --user changc LD_LIBRARY_PATH=/usr/local/lib/python3.12/dist-packages/torch/lib:/usr/local/lib/python3.12/dist-packages/tor
+root         120  0.0  0.0  12020  1132 ?        Ss   09:01   0:00 sshd: /usr/sbin/sshd [listener] 0 of 10-100 startups
+changc       121  3.2  0.0 2144236 152352 ?      Sl   09:01   0:08 /usr/bin/python /usr/local/bin/jupyter-lab --ip=0.0.0.0 --no-browser --allow-root --notebook-dir=/home/changc --NotebookApp.base_url=/ingress/changc-88480
+changc       178  0.0  0.0   6060  5112 pts/0    Ss+  09:02   0:00 /bin/bash -i
+changc       218  0.3  0.0   6136  5356 pts/1    Ss   09:02   0:00 /bin/bash -i
+changc       835  3.7  0.0 2057848 62192 pts/1   Dl   09:05   0:02 python preprocess_dataset.py --input ../../traffic/mixed --dataset_name changc-mixed-2025 --traffic_task detection --granularity packet --output_path ../d
+changc       836  4.2  0.0 2057848 62388 pts/1   Dl   09:05   0:02 python preprocess_dataset.py --input ../../traffic/mixed --dataset_name changc-mixed-2025 --traffic_task detection --granularity packet --output_path ../d
+changc       837  3.9  0.0 2057848 62348 pts/1   Dl   09:05   0:02 python preprocess_dataset.py --input ../../traffic/mixed --dataset_name changc-mixed-2025 --traffic_task detection --granularity packet --output_path ../d
+changc       838  3.8  0.0 2057844 62264 pts/1   Dl   09:05   0:02 python preprocess_dataset.py --input ../../traffic/mixed --dataset_name changc-mixed-2025 --traffic_task detection --granularity packet --output_path ../d
+changc       839  3.9  0.0 2057948 62488 pts/1   Dl   09:05   0:02 python preprocess_dataset.py --input ../../traffic/mixed --dataset_name changc-mixed-2025 --traffic_task detection --granularity packet --output_path ../d
+changc       840  3.7  0.0 2057948 62568 pts/1   Dl   09:05   0:02 python preprocess_dataset.py --input ../../traffic/mixed --dataset_name changc-mixed-2025 --traffic_task detection --granularity packet --output_path ../d
+changc      1140  0.0  0.0   9512  5624 pts/1    R+   09:06   0:00 ps aux
