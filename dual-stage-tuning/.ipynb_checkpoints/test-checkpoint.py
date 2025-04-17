@@ -28,6 +28,7 @@ from datasets import load_dataset
 from transformers.modeling_utils import PreTrainedModel
 import sys
 from trainer import PrefixTrainer
+from unsloth import FastLanguageModel
 # time = datetime.now().strftime("%Y%m%d%H%M%S")
 
 format_style = """### Instruction:
@@ -55,7 +56,8 @@ class FinetuneArguments:
 def get_alpaca_dataset(json_path: str, test_size: float=0.1):
     dataset = load_dataset(
         'json', 
-        data_files=json_path
+        data_files=json_path,
+        split="train"
     )
     return dataset
 
@@ -63,65 +65,33 @@ def get_tokenizer_dataset(
         dataset, 
         tokenizer,
         num_proc,
-        max_length: int=256,
-        json_path: str="",
-        tokenizer_path: str="",
     ):
 
     def process_sample(sample):
-        input_ids, attention_mask, labels = [], [], []
-        instruction = tokenizer(
-            "\n".join([
-                "Human:" + sample["instruction"]
-            ]).strip()
-            + "\n\nAssistant: "
-        )
-        responese = tokenizer(sample["output"] + tokenizer.eos_token)
-        input_ids = instruction["input_ids"] + responese["input_ids"]
-        attention_mask = instruction["attention_mask"] + responese["attention_mask"]
-        labels = [-100] * len(instruction["input_ids"]) + responese["input_ids"]
-        # 最大长度截断
-        if len(input_ids) > max_length:
-            input_ids = input_ids[:max_length]
-            attention_mask = attention_mask[:max_length]
-            labels = labels[:max_length]
-        # 返回结果
+        texts = []
+        EOS_TOKEN = tokenizer.eos_token
+        for instruction, output in zip(sample["instruction"], sample["output"]):
+            text = format_style.format(input, output) + EOS_TOKEN
+            texts.append(text)
         return {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "labels": labels
+            "text": texts
         }
-    
-    # 如果没有传入dataset
-    if dataset is None:
-        # 如果传入json_path，则自动执行get_alpaca_dataset获取dataset
-        if json_path != "":
-            dataset = get_alpaca_dataset(json_path=json_path, test_size=0.1)
-        # 否则，直接报错
-        else:
-            raise ValueError("错误参数：dataset不能为空")
 
-    # 如果没有传入tokenizer
-    if tokenizer is None:
-        # 如果传入tokenizer_path，则加载tokenizer
-        if tokenizer_path != "":
-            tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-        # 否则，直接报错
-        else:
-            raise ValueError("错误参数：tokenizer不能为空")
-
-    return dataset.map(process_sample, remove_columns=dataset['train'].column_names, num_proc=num_proc)
+    return dataset.map(process_sample, num_proc=num_proc, batched = True)
 
 # 加载LLMs model/tokenizer
 def get_base_llm_model_tokenizer(finetune_args):
     # 读取模型类型
     llm_model_name = finetune_args.llm_model_name
     llm_model_path = finetune_args.llm_model_path
-    model = AutoModelForCausalLM.from_pretrained(llm_model_path)
-    # model.enable_input_require_grads()
-    tokenizer = AutoTokenizer.from_pretrained(llm_model_path)
+    MAX_SEQ_LENGTH = 2048
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name = llm_model_path,
+        max_seq_length = MAX_SEQ_LENGTH,
+        dtype = None,
+        load_in_4bit = True
+    )
     return model, tokenizer
-
 
 # 根据peft类型返回相应的config
 def get_peft_config(finetune_args, tokenizer):
@@ -131,11 +101,12 @@ def get_peft_config(finetune_args, tokenizer):
     if peft_type == "lora":
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
-            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+            target_modules=["q_proj", "v_proj"],
             inference_mode=False,
             r=finetune_args.lora_rank,
-            lora_alpha=32,
-            lora_dropout=0.1,
+            lora_alpha=16,
+            lora_dropout=0.01,
+            bias="none"
         )
     elif peft_type == "p-tuning":
         peft_config = PromptEncoderConfig(
@@ -170,12 +141,18 @@ def finetune_train(model, peft_config, tokenizer, dataset, train_args, finetune_
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
-    trainer = PrefixTrainer(
+    # trainer = PrefixTrainer(
+    #     model=model,
+    #     args=train_args,
+    #     train_dataset=dataset["train"],
+    #     data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
+    #     save_changed = False
+    # )
+    trainer = Trainer(
         model=model,
         args=train_args,
         train_dataset=dataset["train"],
-        data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
-        save_changed = False
+        data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=False)
     )
     trainer.train()
 
@@ -215,6 +192,7 @@ def main():
     dataset = get_alpaca_dataset(finetune_args.dataset_path, test_size=0.1)
     logger.info('dataset build successfully!')
     tokenizer_dataset = get_tokenizer_dataset(dataset, llm_tokenizer, max_length=finetune_args.max_length, num_proc=finetune_args.preprocessing_num_workers)
+    # tokenizer_dataset = tokenizer_dataset["train"].remove_columns(["text"])
     logger.info('tokenizer dataset build successfully!')
 
     # 开始训练

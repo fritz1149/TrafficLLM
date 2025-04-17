@@ -11,12 +11,15 @@ python test.py \
     --per_device_train_batch_size 1 \
     --per_device_eval_batch_size 1 \
     --num_train_epochs 1 \
-    --learning_rate 2e-2 \
+    --learning_rate 2e-4 \
     --max_steps 20 \
     --save_steps 20 \
     --logging_steps 10 \
     --overwrite_output_dir \
-    --gradient_accumulation_steps 16 \
+    --gradient_accumulation_steps 8 \
     --remove_unused_columns=False \
+    --fp16=True \
+    --bf16=False \
+    --optim "adamw_8bit" \
     > ../logs/train/$time.txt 2>&1
 
