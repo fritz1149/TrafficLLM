@@ -28,7 +28,8 @@ from datasets import load_dataset
 from transformers.modeling_utils import PreTrainedModel
 import sys
 from trainer import PrefixTrainer
-from unsloth import FastLanguageModel
+from trl import SFTConfig, SFTTrainer
+# from unsloth import FastLanguageModel
 # time = datetime.now().strftime("%Y%m%d%H%M%S")
 
 format_style = """### Instruction:
@@ -48,7 +49,6 @@ class FinetuneArguments:
     llm_model_name: str = field(default="deepseek-r1-distill-qwen-7b")
     llm_model_path: str = field(default="../../deepseek-r1-distill-qwen-7b")
     dataset_path: str = field(default="../datasets/changc-mixed-2025/average_sampling-8000/changc-mixed-2025_detection_packet_train.json")
-    max_length: int = field(default=1024),
     preprocessing_num_workers: int = field(default=10)
     peft_type: str = field(default="lora")
     lora_rank: int = field(default=8)
@@ -67,10 +67,10 @@ def get_tokenizer_dataset(
         num_proc,
     ):
 
-    def process_sample(sample):
+    def process_sample(samples):
         texts = []
         EOS_TOKEN = tokenizer.eos_token
-        for instruction, output in zip(sample["instruction"], sample["output"]):
+        for instruction, output in zip(samples["instruction"], samples["output"]):
             text = format_style.format(input, output) + EOS_TOKEN
             texts.append(text)
         return {
@@ -84,13 +84,19 @@ def get_base_llm_model_tokenizer(finetune_args):
     # 读取模型类型
     llm_model_name = finetune_args.llm_model_name
     llm_model_path = finetune_args.llm_model_path
-    MAX_SEQ_LENGTH = 2048
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name = llm_model_path,
-        max_seq_length = MAX_SEQ_LENGTH,
-        dtype = None,
-        load_in_4bit = True
-    )
+    # MAX_SEQ_LENGTH = 2048
+    # model, tokenizer = FastLanguageModel.from_pretrained(
+    #     model_name = llm_model_path,
+    #     max_seq_length = MAX_SEQ_LENGTH,
+    #     dtype = None,
+    #     load_in_4bit = True
+    # )
+    model = AutoModelForCausalLM.from_pretrained(
+            llm_model_path, 
+            low_cpu_mem_usage=True, 
+            torch_dtype=torch.half
+        )
+    tokenizer = AutoTokenizer.from_pretrained(llm_model_path)
     return model, tokenizer
 
 # 根据peft类型返回相应的config
@@ -129,31 +135,26 @@ def get_peft_config(finetune_args, tokenizer):
 
 # 微调函数
 def finetune_train(model, peft_config, tokenizer, dataset, train_args, finetune_args):
-    model = get_peft_model(model=model, peft_config=peft_config)
-    model = model.half()
-    for k, v in model.named_parameters():
-        if v.requires_grad:
-            v.float()
+    # model = get_peft_model(model=model, peft_config=peft_config)
+    # model = model.half()
+    # for k, v in model.named_parameters():
+    #     if v.requires_grad:
+    #         v.float()
     # model.prompt_encoder.default.float()
     # model.gradient_checkpointing_enable()
-    print(model)
+    # print(model)
     model.enable_input_require_grads()
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
-    # trainer = PrefixTrainer(
-    #     model=model,
-    #     args=train_args,
-    #     train_dataset=dataset["train"],
-    #     data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
-    #     save_changed = False
-    # )
-    trainer = Trainer(
-        model=model,
-        args=train_args,
-        train_dataset=dataset["train"],
-        data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=False)
+    trainer = SFTTrainer(
+        model = model,
+        processing_class=tokenizer,
+        peft_config=peft_config,
+        train_dataset = dataset,
+        args = train_args
     )
+    
     trainer.train()
 
 def main():
@@ -161,8 +162,11 @@ def main():
     warnings.filterwarnings("ignore")
 
     # 加载命令行参数
+    # finetune_args, training_args = HfArgumentParser(
+    #     (FinetuneArguments, TrainingArguments)
+    # ).parse_args_into_dataclasses()
     finetune_args, training_args = HfArgumentParser(
-        (FinetuneArguments, TrainingArguments)
+        (FinetuneArguments, SFTConfig)
     ).parse_args_into_dataclasses()
 
     # 设置logger
@@ -191,15 +195,13 @@ def main():
     # 加载数据
     dataset = get_alpaca_dataset(finetune_args.dataset_path, test_size=0.1)
     logger.info('dataset build successfully!')
-    tokenizer_dataset = get_tokenizer_dataset(dataset, llm_tokenizer, max_length=finetune_args.max_length, num_proc=finetune_args.preprocessing_num_workers)
-    # tokenizer_dataset = tokenizer_dataset["train"].remove_columns(["text"])
+    tokenizer_dataset = get_tokenizer_dataset(dataset, llm_tokenizer, num_proc=finetune_args.preprocessing_num_workers)
     logger.info('tokenizer dataset build successfully!')
 
     # 开始训练
     logger.info('Train start!')
     finetune_train(model=llm_model, peft_config=peft_config, tokenizer=llm_tokenizer, dataset=tokenizer_dataset, train_args=training_args, finetune_args=finetune_args)
     logger.info('Train end! Model saves in the path:::{}'.format(training_args.output_dir))
-
 
 if __name__ == "__main__":
     main()

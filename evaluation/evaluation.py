@@ -16,6 +16,9 @@ def test_set_to_prompt(test_set):
     test_prompts = []
     target_responses = []
 
+    import random
+    random.shuffle(test_set)
+
     for test_data in test_set:
         test_prompts.append(json.loads(test_data)["instruction"])
         target_responses.append(json.loads(test_data)["output"])
@@ -77,12 +80,23 @@ def tg_evaluation(predict_responses, target_responses, test_prompts):
     with open(write_path, "w", encoding="utf-8") as fin:
         json.dump(dataset, fin, indent=4, separators=(',', ': '))
 
+prompt_style = """### Instruction:
+You are an expert with advanced knowledge in understanding network traffic and distinguishing different kinds of traffic.
+Please answer the following network traffic identification  question.
+
+### Question:
+{}
+
+### Response:
+{}
+"""
 
 def main(model_name,
          test_file: str = None,
          label_file: str = None,
          traffic_task: str = None,
          ptuning_path: str = None,
+         num_limit: int = 0,
          **kwargs):
 
     print(model_name, test_file, label_file, traffic_task, ptuning_path)
@@ -116,7 +130,6 @@ def main(model_name,
             from peft import PeftModel
             model = PeftModel.from_pretrained(model, ptuning_path)
             model = model.half().cuda()
-            model.prompt_encoder.default.float()
 
     else:
         model = AutoModel.from_pretrained(model_name, trust_remote_code=True).half().cuda()
@@ -129,34 +142,22 @@ def main(model_name,
 
     predict_responses = []
 
+    if num_limit > 0:
+        test_prompts = test_prompts[:num_limit]
     for test_prompt in tqdm(test_prompts):
         if traffic_task == "detection":
             if 'chatglm' in model_name:
                 response, history = model.chat(tokenizer, test_prompt, history=[], top_p=0.85, temperature=0.1)
             elif 'qwen' in model_name:
-                text = f"[Round 1]\n\n问：{test_prompt}\n\n答："
-                messages = [
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": text}
-                ]
-                text = tokenizer.apply_chat_template(
-                    messages,
-                    tokenize=False,
-                    add_generation_prompt=True
-                )
+                text = prompt_style.format(test_prompt, "")
                 device="cuda"
                 model_inputs = tokenizer([text], return_tensors="pt").to(device)
-                generated_ids = model.generate(
-                    model_inputs.input_ids,
-                    max_new_tokens=1024,
-                    attention_mask= model_inputs.attention_mask,
-                    temperature = 0.7,
-                    pad_token_id=tokenizer.eos_token_id 
+                outputs = model.generate(
+                    input_ids=model_inputs.input_ids,
+                    max_new_tokens=2048,
+                    attention_mask= model_inputs.attention_mask
                 )
-                generated_ids = [
-                    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-                ]
-                response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+                response = tokenizer.batch_decode(outputs)[0]
         elif traffic_task == "generation":
             response, history = model.chat(tokenizer, test_prompt, history=[])
         else:

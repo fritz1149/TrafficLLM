@@ -43,29 +43,47 @@ def write_labels(labels, output_path):
         json.dump(label_dict, fin, indent=4, separators=(',', ': '))
 
 
-def build_dataset(args, path, file, sampling_method):
+def build_data_from_dir(args, files_path, sampling_method=None, max_sampling_number=None):
     build_data = []
-    files_path = os.path.join(path, file)
     pcaps = os.listdir(files_path)
     samples_per_pcap = -1
-    if sampling_method == "average_sampling":
-        samples_per_pcap = math.ceil(args.max_sampling_number / len(pcaps))
+    if sampling_method == "average_sampling" and max_sampling_number is not None:
+        samples_per_pcap = math.ceil(max_sampling_number / len(pcaps))
     for pcap in tqdm(pcaps):
         if args.granularity == "flow":
-            pcap_data = build_flow_data(os.path.join(files_path, pcap))
+            pcap_data = build_flow_data(os.path.join(files_path, pcap), args.flow_feature)
         else:
             pcap_data = build_packet_data(os.path.join(files_path, pcap), samples_per_pcap=samples_per_pcap)
         build_data.extend(pcap_data)
+    return build_data
+
+
+def build_dataset(args, path, file, sampling_method=None):
+    files_path = os.path.join(path, file)
+    build_data = build_data_from_dir(
+        args,
+        files_path,
+        sampling_method=sampling_method,
+        max_sampling_number=args.max_sampling_number,
+    )
 
     train_data, test_data = split_dataset(build_data=build_data, max_sampling_number=args.max_sampling_number)
     return train_data, test_data
 
 
-def save_dataset(args, train_dataset, test_dataset):
+def build_dataset_from_split(args, path, file):
+    files_path = os.path.join(path, file)
+    return build_data_from_dir(args, files_path)
+
+
+def save_dataset(args, train_dataset, test_dataset, val_dataset=None):
     write_dataset(train_dataset, os.path.join(args.output_path, args.output_name + "_" + args.traffic_task + "_" +
-                                              args.granularity + "_train.json"))
+                                              args.granularity + "_train.jsonl"))
     write_dataset(test_dataset, os.path.join(args.output_path, args.output_name + "_" + args.traffic_task + "_" +
-                                             args.granularity + "_test.json"))
+                                             args.granularity + "_test.jsonl"))
+    if val_dataset is not None:
+        write_dataset(val_dataset, os.path.join(args.output_path, args.output_name + "_" + args.traffic_task + "_" +
+                                                 args.granularity + "_val.jsonl"))
 
 
 def build_td_text_dataset(traffic_data, first_label=None, second_label=None, task_name=None, granularity=None):
@@ -95,10 +113,29 @@ def build_td_text_dataset(traffic_data, first_label=None, second_label=None, tas
     elif task_name == "EAC":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
                       "traffic features, and payloads. Please conduct the ENCRYPTED APP CLASSIFICATION TASK to determine " \
-                      "which APP category the encrypted traffic belongs to. "
-        # The categories " \
-        #                       "include '163Mail, 51cto, Acm, Adobe, Alibaba, Alicdn, Alipay, Amap, AmazonAWS, AmpProject, Apple," \
-        #                       "Arxiv, Asus, Atlassian, AzureEdge, Baidu, Bilibili, Biligame, Booking, LA'." \
+                      "which APP category the encrypted traffic belongs to. The categories " \
+                      "include '163Mail, 51cto, Acm, Adobe, Alibaba, Alicdn, Alipay, Amap, AmazonAWS, AmpProject, Apple," \
+                      "Arxiv, Asus, Atlassian, AzureEdge, Baidu, Bilibili, Biligame, Booking, LA'." \
+
+        output = second_label
+        # instruction = "Below is a traffic " + granularity + ". Please conduct the encrypted App classification task: "
+        #
+        # output = "The traffic category is likely to be recognized as " + second_label + "."
+
+    elif task_name == "EAC2":
+        instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
+                      "traffic features, and payloads. Please conduct the ENCRYPTED APP CLASSIFICATION TASK to determine " \
+                      "which APP category the encrypted traffic belongs to. The categories " \
+                      "include '163, 51la, 51cto, Acm, Adobe, Alibaba, Alicdn, Alipay, Amap, AmazonAWS, AmpProject, Apple, " \
+                      "Arxiv, Asus, Atlassian, AzureEdge, Baidu, Bilibili, Biligame, Booking, Chia, Chinatax, Cisco, Cloudflare, " \
+                      "Cloudfront, Cnblogs, Codepen, Crazyegg, Criteo, Ctrip, Dailymotion, Deepl, Digitaloceanspaces, Duckduckgo, " \
+                      "Eastday, Eastmoney, Elsevier, Facebook, Feishu, Ggpht, Github, Gitlab, Gmail, Goat, Google, Grammarly, " \
+                      "Gravatar, Guancha, Huanqiu, Huawei, Hubspot, Huya, Ibm, Icloud, Ieee, Instagram, Iqiyi, Jb51, Jd, Kugou, " \
+                      "LeetcodeCn, Media, Mi, Microsoft, Mozilla, Msn, Naver, Netflix, Nike, Notion, Nvidia, Office, Onlinedown, " \
+                      "Opera, Oracle, Outbrain, Overleaf, Paypal, Pinduoduo, Python, Qcloud, Qq, Researchgate, Runoob, Sciencedirect, " \
+                      "Semanticscholar, Sina, Smzdm, Snapchat, Sohu, Spring, Springer, Squarespace, Statcounter, Steampowered, " \
+                      "Tco, Taboola, Teads, Thepaper, Tiktok, Toutiao, Twimg, Twitter, Unity3d, V2ex, Vivo, Vk, Vmware, Walmart, " \
+                      "Weibo, Wikimedia, Wikipedia, Wp, Xiaomi, Ximalaya, Yahoo, Yandex, Youtube, Yy, Zhihu'." \
 
         output = second_label
         # instruction = "Below is a traffic " + granularity + ". Please conduct the encrypted App classification task: "
@@ -118,16 +155,26 @@ def build_td_text_dataset(traffic_data, first_label=None, second_label=None, tas
 
     elif task_name == "EVD":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                      "traffic features, and payloads. Please conduct the ENCRYPTED VPN DETECTION TASK to determine " \
-                      "which behavior or application category the VPN encrypted traffic belongs to. The categories " \
-                      "include 'aim, bittorrent, email, facebook, ftps, hangout, icq, netflix, sftp, skype, spotify, " \
-                      "vimeo, voipbuster, youtube'."
+                      "traffic features, and payloads. Please conduct the TRAFFIC DETECTION TASK to determine " \
+                      "which behavior or application category the encrypted traffic belongs to. The categories " \
+                      "include 'aim, bittorrent, email, gmail, facebook, ftps, hangouts, icq, netflix, scp, skype, spotify, " \
+                      "tor, torrent, vimeo, voipbuster, vpn-ftps, vpn-sftp, youtube'."
 
         output = second_label
 
         # instruction = "Below is a traffic " + granularity + ". Please conduct the encrypted VPN detection task: "
         #
         # output = "The traffic category is likely to be recognized as " + second_label + "."
+
+    elif task_name == "EVD2":
+        instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
+                      "traffic features, and payloads. Please conduct the TRAFFIC DETECTION TASK to determine " \
+                      "which behavior or application category the encrypted traffic belongs to. " \
+                      "Some categories are traffic transmitted via VPN，while others are not. The categories " \
+                      "include 'chat, emial, ft, p2p, stream, voip, vpn-chat, vpn-email, vpn-ft, vpn-p2p, " \
+                      "vpn-stream, vpn-voip'."
+
+        output = second_label
 
     elif task_name == "MDD":
         instruction = "Below is a traffic " + granularity + ". Please conduct the malicious DoH detection task: "

@@ -24,7 +24,7 @@ def load_model(model, ptuning_path):
 
     return model
 
-format_style = """### Instruction:
+prompt_style = """### Instruction:
 You are an expert with advanced knowledge in understanding network traffic and distinguishing different kinds of traffic.
 Please answer the following network traffic identification  question.
 
@@ -63,11 +63,11 @@ def main(model_path, text, ptuning_path, ptuning=False):
         device="cuda"
         model_inputs = tokenizer([text], return_tensors="pt").to(device)
         outputs = model.generate(
-            model_inputs.input_ids,
-            max_new_tokens=1024,
+            input_ids=model_inputs.input_ids,
+            max_new_tokens=2048,
             attention_mask= model_inputs.attention_mask
         )
-        response = tokenizer.batch_decode(outputs)
+        response = tokenizer.batch_decode(outputs)[0]
     else:
         response, history = model.chat(tokenizer, text, history=[])
     print(f"response: {response}")

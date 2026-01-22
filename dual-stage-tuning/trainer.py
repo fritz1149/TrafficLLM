@@ -45,7 +45,7 @@ class PrefixTrainer(Trainer):
         if os.environ['MODEL'] != 'qwen' and (not isinstance(self.model, PreTrainedModel)):
             print("Trainer.model is not a `PreTrainedModel`")
             if self.save_changed:
-                print("Saving PrefixEncoder")
+                print("Saving Learnable Parameters")
                 filtered_state_dict = {}
                 for k, v in self.model.named_parameters():
                     if v.requires_grad:
@@ -56,7 +56,7 @@ class PrefixTrainer(Trainer):
                 torch.save(state_dict, os.path.join(output_dir, WEIGHTS_NAME))
         else:
             if self.save_changed:
-                print("Saving PrefixEncoder")
+                print("Saving Learnable Parameters")
                 filtered_state_dict = {}
                 for k, v in self.model.named_parameters():
                     if v.requires_grad:

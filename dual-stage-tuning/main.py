@@ -50,10 +50,10 @@ from arguments import ModelArguments, DataTrainingArguments
 logger = logging.getLogger(__name__)
 
 def main():
-    if os.environ['MODEL'] == 'qwen':
-        parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
-    elif os.environ['MODEL'] == 'chatglm':
-        parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
+    # if os.environ['MODEL'] == 'qwen':
+    #     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    # elif os.environ['MODEL'] == 'chatglm':
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
@@ -94,6 +94,10 @@ def main():
     if data_args.train_file is not None:
         data_files["train"] = data_args.train_file
         extension = data_args.train_file.split(".")[-1]
+    if data_args.validation_file is not None:
+        data_files["validation"] = data_args.validation_file
+    if data_args.test_file is not None:
+        data_files["test"] = data_args.test_file
 
     raw_datasets = load_dataset(
         extension,
@@ -103,17 +107,28 @@ def main():
     )
     # Load pretrained model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+    
     if model_args.model_base == 'qwen':
         model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path)
         from peft import PrefixTuningConfig, get_peft_model, TaskType
         peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=10)
         model = get_peft_model(model, peft_config)
+    elif model_args.model_base == 'qwen-vl':
+        from transformers import Qwen3VLForConditionalGeneration
+        model = Qwen3VLForConditionalGeneration.from_pretrained(model_args.model_name_or_path)
+        from peft import PrefixTuningConfig, get_peft_model, TaskType
+        peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=10)
+        model = get_peft_model(model, peft_config)
+        QWENVL_PAD_TOKEN = tokenizer.special_tokens_map.get("pad_token", None)
+        QWENVL_PAD_ID = tokenizer.convert_tokens_to_ids([QWENVL_PAD_TOKEN])[0]
+
     elif model_args.model_base == 'chatglm':
         config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
         config.pre_seq_len = model_args.pre_seq_len
         config.prefix_projection = model_args.prefix_projection
         model = AutoModel.from_pretrained(model_args.model_name_or_path, config=config, trust_remote_code=True)
 
+    # TODO：待修改或添加（若用到）
     if model_args.ptuning_checkpoint is not None:
         # Evaluation
         # Loading extra state dict of prefix encoder
@@ -130,6 +145,7 @@ def main():
     if model_args.quantization_bit is not None:
         print(f"Quantized to {model_args.quantization_bit} bit")
         model = model.quantize(model_args.quantization_bit)
+    # TODO：待修改或添加（若报错）
     if model_args.pre_seq_len is not None:
         # P-tuning v2
         model = model.half()
@@ -159,10 +175,69 @@ def main():
     # Temporarily set max_target_length for training.
     max_target_length = data_args.max_target_length
 
+    def preprocess_function_eval(examples):
+        if model_args.model_base == 'qwen-vl':
+            model_inputs = {
+                "input_ids": [],
+                "attention_mask": [],
+                "labels": [],
+            }
+            for i in range(len(examples[prompt_column])):
+                if examples[prompt_column][i] and examples[response_column][i]:
+                    query, answer = examples[prompt_column][i], examples[response_column][i]
+
+                    query = f"<|im_start|>user\n{query}<|im_end|>\n<|im_start|>assistant\n"
+                    input_ids = tokenizer.tokenize(query)
+                    attention_mask = [1] * len(input_ids)
+
+                    if len(input_ids) > data_args.max_source_length:
+                        input_ids = input_ids[:data_args.max_source_length]
+                        attention_mask = attention_mask[:data_args.max_source_length]
+                    else:
+                        pad_len = data_args.max_source_length - len(input_ids)
+                        input_ids = input_ids + [QWENVL_PAD_ID] * pad_len
+                        attention_mask = attention_mask + [0] * pad_len
+
+                    answer = f"{answer}<|im_end|>"
+                    labels = tokenizer.tokenize(answer)
+                    if len(labels) > max_target_length:
+                        labels = labels[:max_target_length]
+                    else:
+                        pad_len = max_target_length - len(labels)
+                        if data_args.ignore_pad_token_for_loss:
+                            labels = labels + [-100] * pad_len
+                        else:
+                            labels = labels + [QWENVL_PAD_ID] * pad_len
+
+                    model_inputs["input_ids"].append(input_ids)
+                    model_inputs["attention_mask"].append(attention_mask)
+                    model_inputs["labels"].append(labels)
+        elif model_args.model_base == 'chatglm':
+            inputs, targets = [], []
+            for i in range(len(examples[prompt_column])):
+                if examples[prompt_column][i] and examples[response_column][i]:
+                    query = examples[prompt_column][i]
+                    history = examples[history_column][i] if history_column is not None else None
+                    prompt = tokenizer.build_prompt(query, history)
+                    inputs.append(prompt)
+                    targets.append(examples[response_column][i])
+
+            inputs = [prefix + inp for inp in inputs]
+            model_inputs = tokenizer(inputs, max_length=data_args.max_source_length, truncation=True, padding=True)
+            labels = tokenizer(text_target=targets, max_length=max_target_length, truncation=True)
+
+            if data_args.ignore_pad_token_for_loss:
+                labels["input_ids"] = [
+                    [(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels["input_ids"]
+                ]
+            model_inputs["labels"] = labels["input_ids"]
+
+        return model_inputs
+
     def preprocess_function_train(examples):
         max_seq_length = data_args.max_source_length + data_args.max_target_length + 1
         
-        if model_args.model_base == 'qwen':
+        if model_args.model_base.startswith('qwen'):
             model_inputs = {
                 "input_ids": [],
                 "attention_mask": [],
@@ -191,6 +266,34 @@ def main():
                     model_inputs["input_ids"].append(input_ids)
                     model_inputs["labels"].append(labels)
                     model_inputs["attention_mask"].append(attention_mask)
+        if model_args.model_base == 'qwen-vl':
+            for i in range(len(examples[prompt_column])):
+                if examples[prompt_column][i] and examples[response_column][i]:
+                    query, answer = examples[prompt_column][i], examples[response_column][i]
+
+                    query = f"<|im_start|>user\n{query}<|im_end|>\n<|im_start|>assistant\n"
+                    query_ids = tokenizer.tokenize(query)
+                    answer = f"{answer}<|im_end|>"
+                    answer_ids = tokenizer.tokenize(answer)
+                    
+                    input_ids = query_ids+answer_ids
+                    attention_mask = [1] * len(input_ids)
+                    labels = [-100] * len(query_ids) + answer_ids
+
+                    if len(input_ids) > data_args.max_source_length:
+                        input_ids = input_ids[:data_args.max_source_length]
+                        attention_mask = attention_mask[:data_args.max_source_length]
+                        labels = labels[:data_args.max_source_length]
+                    else:
+                        pad_len = data_args.max_source_length - len(input_ids)
+                        input_ids = input_ids + [QWENVL_PAD_ID] * pad_len
+                        attention_mask = attention_mask + [0] * pad_len
+                        labels = labels + [-100] * pad_len
+
+                    model_inputs["input_ids"].append(input_ids)
+                    model_inputs["labels"].append(labels)
+                    model_inputs["attention_mask"].append(attention_mask)
+
         elif model_args.model_base == 'chatglm':
             for i in range(len(examples[prompt_column])):
                 if examples[prompt_column][i] and examples[response_column][i]:
@@ -227,23 +330,56 @@ def main():
         print("label_ids", example["labels"])
         print("labels", tokenizer.decode(example["labels"]))
 
-    if training_args.do_train:
-        if "train" not in raw_datasets:
-            raise ValueError("--do_train requires a train dataset")
-        train_dataset = raw_datasets["train"]
-        if data_args.max_train_samples is not None:
-            max_train_samples = min(len(train_dataset), data_args.max_train_samples)
-            train_dataset = train_dataset.select(range(max_train_samples))
-        with training_args.main_process_first(desc="train dataset map pre-processing"):
-            train_dataset = train_dataset.map(
-                preprocess_function_train,
+    def prepare_dataset(
+        split_name,
+        preprocess_fn,
+        max_samples,
+        stage_desc,
+        map_desc,
+        require_message,
+        print_example=False,
+    ):
+        if split_name not in raw_datasets:
+            raise ValueError(require_message)
+        dataset = raw_datasets[split_name]
+        if max_samples is not None:
+            max_samples = min(len(dataset), max_samples)
+            dataset = dataset.select(range(max_samples))
+        with training_args.main_process_first(desc=stage_desc):
+            dataset = dataset.map(
+                preprocess_fn,
                 batched=True,
                 num_proc=data_args.preprocessing_num_workers,
                 remove_columns=column_names,
                 load_from_cache_file=not data_args.overwrite_cache,
-                desc="Running tokenizer on train dataset",
+                desc=map_desc,
             )
-        # print_dataset_example(train_dataset[0])
+        if print_example:
+            print_dataset_example(dataset[0])
+        return dataset
+
+    preprocess_functions = {
+        "train": preprocess_function_train,
+        "eval": preprocess_function_eval,
+        "predict": preprocess_function_predict,
+    }
+    max_samples = {
+        "train": data_args.max_train_samples,
+        "eval": data_args.max_eval_samples,
+        "predict": data_args.max_predict_samples,
+    }
+    dataset = {}
+    for split_name in ["train", "eval", "predict"]:
+        if split_name in raw_datasets:
+            dataset[split_name] = prepare_dataset(
+                split_name=split_name,
+                preprocess_fn=preprocess_functions[split_name],
+                max_samples=max_samples[split_name],
+                stage_desc=f"{split_name} dataset map pre-processing",
+                map_desc=f"Running tokenizer on {split_name} dataset",
+                require_message=f"--do_{split_name} requires a {split_name} dataset",
+                print_example=(split_name == "train"),
+            )
 
     # Metric
     def compute_metrics(eval_preds):
@@ -279,47 +415,47 @@ def main():
         return score_dict
 
     # Initialize our Trainer
-    if model_args.model_base == 'chatglm':
+    # if model_args.model_base == 'chatglm':
         # Override the decoding parameters of Seq2SeqTrainer
-        training_args.generation_max_length = (
-            training_args.generation_max_length
-            if training_args.generation_max_length is not None
-            else data_args.val_max_target_length
-        )
-        training_args.generation_num_beams = (
-            data_args.num_beams if data_args.num_beams is not None else training_args.generation_num_beams
-        )
-        from trainer_seq2seq import Seq2SeqTrainer
-        trainer = Seq2SeqTrainer(
+    training_args.generation_max_length = (
+        training_args.generation_max_length
+        if training_args.generation_max_length is not None
+        else data_args.val_max_target_length
+    )
+    training_args.generation_num_beams = (
+        data_args.num_beams if data_args.num_beams is not None else training_args.generation_num_beams
+    )
+    from trainer_seq2seq import Seq2SeqTrainer
+    trainer = Seq2SeqTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset if training_args.do_train else None,
+        eval_dataset=eval_dataset if training_args.do_eval else None,
+        tokenizer=tokenizer,
+        data_collator=DataCollatorForSeq2Seq(
+            tokenizer,
             model=model,
-            args=training_args,
-            train_dataset=train_dataset if training_args.do_train else None,
-            eval_dataset=eval_dataset if training_args.do_eval else None,
-            tokenizer=tokenizer,
-            data_collator=DataCollatorForSeq2Seq(
-                tokenizer,
-                model=model,
-                label_pad_token_id=-100 if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id,
-                pad_to_multiple_of=None,
-                padding=False
-            ),
-            compute_metrics=compute_metrics if training_args.predict_with_generate else None,
-            save_changed=model_args.pre_seq_len is not None
-        )
-    elif model_args.model_base == 'qwen':
-        from trainer import PrefixTrainer
-        if torch.cuda.device_count() > 1:
-            print("Let's use", torch.cuda.device_count(), "GPUs!")
-            model = nn.DataParallel(model)
-        trainer = PrefixTrainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
-            tokenizer=tokenizer,
-            data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
-            # save_changed=model_args.pre_seq_len is not None
-            save_changed=False
-        )
+            label_pad_token_id=-100 if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id,
+            pad_to_multiple_of=None,
+            padding=False
+        ),
+        compute_metrics=compute_metrics if training_args.predict_with_generate else None,
+        save_changed=model_args.pre_seq_len is not None
+    )
+    # elif model_args.model_base == 'qwen':
+    #     from trainer import PrefixTrainer
+    #     if torch.cuda.device_count() > 1:
+    #         print("Let's use", torch.cuda.device_count(), "GPUs!")
+    #         model = nn.DataParallel(model)
+    #     trainer = PrefixTrainer(
+    #         model=model,
+    #         args=training_args,
+    #         train_dataset=train_dataset,
+    #         tokenizer=tokenizer,
+    #         data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True),
+    #         # save_changed=model_args.pre_seq_len is not None
+    #         save_changed=False
+    #     )
 
     # Training
     if training_args.do_train:
@@ -343,6 +479,45 @@ def main():
         trainer.log_metrics("train", metrics)
         trainer.save_metrics("train", metrics)
         trainer.save_state()
+    # Evaluation
+    results = {}
+    max_seq_length = data_args.max_source_length + data_args.max_target_length + 1
+    if training_args.do_eval:
+        logger.info("*** Evaluate ***")
+        metrics = trainer.evaluate(metric_key_prefix="eval", do_sample=True, top_p=0.7, max_length=max_seq_length, temperature=0.95)
+        max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
+        metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
+
+        trainer.log_metrics("eval", metrics)
+        trainer.save_metrics("eval", metrics)
+
+    if training_args.do_predict:
+        logger.info("*** Predict ***")
+        predict_results = trainer.predict(predict_dataset, metric_key_prefix="predict", max_length=max_seq_length, do_sample=True, top_p=0.7, temperature=0.95)
+        metrics = predict_results.metrics
+        max_predict_samples = (
+            data_args.max_predict_samples if data_args.max_predict_samples is not None else len(predict_dataset)
+        )
+        metrics["predict_samples"] = min(max_predict_samples, len(predict_dataset))
+
+        trainer.log_metrics("predict", metrics)
+        trainer.save_metrics("predict", metrics)
+
+        if trainer.is_world_process_zero():
+            if training_args.predict_with_generate:
+                predictions = tokenizer.batch_decode(
+                    predict_results.predictions, skip_special_tokens=True, clean_up_tokenization_spaces=True
+                )
+                predictions = [pred.strip() for pred in predictions]
+                labels = tokenizer.batch_decode(
+                    predict_results.label_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
+                )
+                labels = [label.strip() for label in labels]
+                output_prediction_file = os.path.join(training_args.output_dir, "generated_predictions.txt")
+                with open(output_prediction_file, "w", encoding="utf-8") as writer:
+                    for p, l in zip(predictions, labels):
+                        res = json.dumps({"labels": l, "predict": p}, ensure_ascii=False)
+                        writer.write(f"{res}\n")
 
 def _mp_fn(index):
     # For xla_spawn (TPUs)
