@@ -57,7 +57,7 @@ def main():
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
-        model_args, data_arg, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
@@ -111,17 +111,17 @@ def main():
     if model_args.model_base == 'qwen':
         model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path)
         from peft import PrefixTuningConfig, get_peft_model, TaskType
-        peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=10)
+        peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=model_args.pre_seq_len)
         model = get_peft_model(model, peft_config)
     elif model_args.model_base == 'qwen-vl':
         from transformers import Qwen3VLForConditionalGeneration
         model = Qwen3VLForConditionalGeneration.from_pretrained(model_args.model_name_or_path)
         from peft import PrefixTuningConfig, get_peft_model, TaskType
-        peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=10)
+        peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=model_args.pre_seq_len)
         model = get_peft_model(model, peft_config)
         QWENVL_PAD_TOKEN = tokenizer.special_tokens_map.get("pad_token", None)
+        assert QWENVL_PAD_TOKEN is not None
         QWENVL_PAD_ID = tokenizer.convert_tokens_to_ids([QWENVL_PAD_TOKEN])[0]
-
     elif model_args.model_base == 'chatglm':
         config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
         config.pre_seq_len = model_args.pre_seq_len
@@ -137,7 +137,7 @@ def main():
         for k, v in prefix_state_dict.items():
             if k.startswith("transformer.prefix_encoder."):
                 new_prefix_state_dict[k[len("transformer.prefix_encoder."):]] = v
-        if not model_args.model_base == 'qwen':
+        if not model_args.model_base.startswith('qwen'):
             model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
         else:
             model.prompt_encoder.default.load_state_dict(new_prefix_state_dict)
@@ -149,7 +149,7 @@ def main():
     if model_args.pre_seq_len is not None:
         # P-tuning v2
         model = model.half()
-        if not model_args.model_base == 'qwen':
+        if not model_args.model_base.startswith('qwen'):
             model.transformer.prefix_encoder.float()
         else:
             model.prompt_encoder.default.float()
@@ -187,7 +187,7 @@ def main():
                     query, answer = examples[prompt_column][i], examples[response_column][i]
 
                     query = f"<|im_start|>user\n{query}<|im_end|>\n<|im_start|>assistant\n"
-                    input_ids = tokenizer.tokenize(query)
+                    input_ids = tokenizer.encode(query)
                     attention_mask = [1] * len(input_ids)
 
                     if len(input_ids) > data_args.max_source_length:
@@ -199,7 +199,7 @@ def main():
                         attention_mask = attention_mask + [0] * pad_len
 
                     answer = f"{answer}<|im_end|>"
-                    labels = tokenizer.tokenize(answer)
+                    labels = tokenizer.encode(answer)
                     if len(labels) > max_target_length:
                         labels = labels[:max_target_length]
                     else:
@@ -272,9 +272,9 @@ def main():
                     query, answer = examples[prompt_column][i], examples[response_column][i]
 
                     query = f"<|im_start|>user\n{query}<|im_end|>\n<|im_start|>assistant\n"
-                    query_ids = tokenizer.tokenize(query)
+                    query_ids = tokenizer.encode(query)
                     answer = f"{answer}<|im_end|>"
-                    answer_ids = tokenizer.tokenize(answer)
+                    answer_ids = tokenizer.encode(answer)
                     
                     input_ids = query_ids+answer_ids
                     attention_mask = [1] * len(input_ids)
@@ -361,7 +361,7 @@ def main():
     preprocess_functions = {
         "train": preprocess_function_train,
         "eval": preprocess_function_eval,
-        "predict": preprocess_function_predict,
+        "predict": preprocess_function_eval,
     }
     max_samples = {
         "train": data_args.max_train_samples,
@@ -380,6 +380,9 @@ def main():
                 require_message=f"--do_{split_name} requires a {split_name} dataset",
                 print_example=(split_name == "train"),
             )
+    train_dataset = dataset["train"]
+    eval_dataset = dataset["eval"]
+    test_dataset = dataset["test"]
 
     # Metric
     def compute_metrics(eval_preds):
