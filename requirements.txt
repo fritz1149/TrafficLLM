@@ -16,3 +16,4 @@ datasets
 jieba
 rouge_chinese
 nltk
+peft

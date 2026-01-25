@@ -3,6 +3,7 @@ from preprocess_utils import (
     build_td_text_dataset,
     build_tg_text_dataset,
     build_tu_text_dataset,
+    get_td_prompt_prefix_suffix,
     write_labels,
     build_dataset,
     build_dataset_from_split,
@@ -26,7 +27,9 @@ def get_args():
     parser.add_argument("--max_sampling_number", type=int, help="max_sampling_number", required=False)
     parser.add_argument("--split_mode", action="store_true", help="load train/test/val splits from directories")
     parser.add_argument("--flow_feature", type=str, help="flow feature type", required=True)
-    
+    parser.add_argument("--max_packet_number", type=int, help="max_packet_number", required=False)
+    parser.add_argument("--max_token_length", type=int, help="max_token_length", required=False)
+    parser.add_argument("--tokenizer_path", type=str, help="tokenizer_path", required=False)
 
     args = parser.parse_args()
     return args
@@ -41,6 +44,11 @@ def traffic_detection_preprocess(args, detection_task):
     train_dataset = []
     test_dataset = []
     labels = []
+
+    args.prompt_prefix, args.prompt_suffix = get_td_prompt_prefix_suffix(
+        detection_task,
+        args.granularity,
+    )
 
     if args.split_mode:
         train_root = os.path.join(args.input, "train")

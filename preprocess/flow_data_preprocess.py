@@ -10,7 +10,7 @@ MAX_PACKET_LENGTH_IN_FLOW = 256
 HEX_PACKET_START_INDEX = 0  # 48 # 76
 
 
-def build_flow_data(pcap_file, flow_feature="flow bytes"):
+def build_flow_data(pcap_file, flow_feature="flow bytes", max_packet_number=MAX_PACKET_NUMBER):
 
     build_data = []
 
@@ -21,7 +21,7 @@ def build_flow_data(pcap_file, flow_feature="flow bytes"):
 
         hex_stream = []
         for i, packet in enumerate(packets):
-            if i >= MAX_PACKET_NUMBER:
+            if i >= max_packet_number:
                 break
             packet_data = packet.copy()
             data = (binascii.hexlify(bytes(packet_data)))
@@ -49,7 +49,7 @@ def build_flow_data(pcap_file, flow_feature="flow bytes"):
 
             length_seq = flow.lengths
             for i, packet_length in enumerate(length_seq):
-                if i >= MAX_PACKET_NUMBER:
+                if i >= max_packet_number:
                     break
                 flow_seq.append(str(packet_length))
 
@@ -97,7 +97,7 @@ def build_flow_data(pcap_file, flow_feature="flow bytes"):
 
         with open(tmp_path, "r", encoding="utf-8") as fin:
             lines = fin.readlines()
-        for line in lines[:MAX_PACKET_NUMBER]:
+        for line in lines[:max_packet_number]:
             values = line[:-1].split("\t")
             if not values or values[0] == "":
                 continue

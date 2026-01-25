@@ -95,7 +95,7 @@ def main():
         data_files["train"] = data_args.train_file
         extension = data_args.train_file.split(".")[-1]
     if data_args.validation_file is not None:
-        data_files["validation"] = data_args.validation_file
+        data_files["eval"] = data_args.validation_file
     if data_args.test_file is not None:
         data_files["test"] = data_args.test_file
 
@@ -188,26 +188,20 @@ def main():
 
                     query = f"<|im_start|>user\n{query}<|im_end|>\n<|im_start|>assistant\n"
                     input_ids = tokenizer.encode(query)
-                    attention_mask = [1] * len(input_ids)
-
-                    if len(input_ids) > data_args.max_source_length:
-                        input_ids = input_ids[:data_args.max_source_length]
-                        attention_mask = attention_mask[:data_args.max_source_length]
-                    else:
-                        pad_len = data_args.max_source_length - len(input_ids)
-                        input_ids = input_ids + [QWENVL_PAD_ID] * pad_len
-                        attention_mask = attention_mask + [0] * pad_len
+                    origin_len = len(input_ids)
+                    assert origin_len <= data_args.max_source_length
+                    pad_len = data_args.max_source_length - origin_len
+                    input_ids = input_ids + [QWENVL_PAD_ID] * pad_len
+                    attention_mask = [1] * origin_len + [0] * pad_len
 
                     answer = f"{answer}<|im_end|>"
                     labels = tokenizer.encode(answer)
-                    if len(labels) > max_target_length:
-                        labels = labels[:max_target_length]
+                    assert len(labels) <= max_target_length
+                    pad_len = max_target_length - len(labels)
+                    if data_args.ignore_pad_token_for_loss:
+                        labels = labels + [-100] * pad_len
                     else:
-                        pad_len = max_target_length - len(labels)
-                        if data_args.ignore_pad_token_for_loss:
-                            labels = labels + [-100] * pad_len
-                        else:
-                            labels = labels + [QWENVL_PAD_ID] * pad_len
+                        labels = labels + [QWENVL_PAD_ID] * pad_len
 
                     model_inputs["input_ids"].append(input_ids)
                     model_inputs["attention_mask"].append(attention_mask)
@@ -275,20 +269,21 @@ def main():
                     query_ids = tokenizer.encode(query)
                     answer = f"{answer}<|im_end|>"
                     answer_ids = tokenizer.encode(answer)
+
+                    assert len(query_ids) <= data_args.max_source_length, f"query_ids len: {len(query_ids)}"
+                    assert len(answer_ids) <= data_args.max_target_length, f"answer_ids len: {len(answer_ids)}"
                     
                     input_ids = query_ids+answer_ids
-                    attention_mask = [1] * len(input_ids)
-                    labels = [-100] * len(query_ids) + answer_ids
+                    pad_len = max_seq_length - len(input_ids)
+                    origin_len = len(input_ids)
+                    input_ids = input_ids + [QWENVL_PAD_ID] * pad_len
 
-                    if len(input_ids) > data_args.max_source_length:
-                        input_ids = input_ids[:data_args.max_source_length]
-                        attention_mask = attention_mask[:data_args.max_source_length]
-                        labels = labels[:data_args.max_source_length]
-                    else:
-                        pad_len = data_args.max_source_length - len(input_ids)
-                        input_ids = input_ids + [QWENVL_PAD_ID] * pad_len
-                        attention_mask = attention_mask + [0] * pad_len
-                        labels = labels + [-100] * pad_len
+                    attention_mask = [1] * origin_len + [0] * pad_len
+                    labels = [-100] * len(query_ids) + answer_ids + [-100] * pad_len
+
+                    assert len(input_ids) == max_seq_length, f"input_ids len: {len(input_ids)}"
+                    assert len(labels) == max_seq_length, f"labels len: {len(labels)}"
+                    assert len(attention_mask) == max_seq_length, f"attention_mask len: {len(attention_mask)}"
 
                     model_inputs["input_ids"].append(input_ids)
                     model_inputs["labels"].append(labels)
@@ -320,15 +315,17 @@ def main():
 
                     model_inputs["input_ids"].append(input_ids)
                     model_inputs["labels"].append(labels)
-        
 
         return model_inputs
     
     def print_dataset_example(example):
+        print("=" * 50)
         print("input_ids", example["input_ids"])
         print("inputs", tokenizer.decode(example["input_ids"]))
         print("label_ids", example["labels"])
-        print("labels", tokenizer.decode(example["labels"]))
+        filtered_labels = [l for l in example["labels"] if l != -100]
+        print("labels", tokenizer.decode(filtered_labels))
+        print("=" * 50)
 
     def prepare_dataset(
         split_name,
@@ -361,15 +358,15 @@ def main():
     preprocess_functions = {
         "train": preprocess_function_train,
         "eval": preprocess_function_eval,
-        "predict": preprocess_function_eval,
+        "test": preprocess_function_eval,
     }
     max_samples = {
         "train": data_args.max_train_samples,
         "eval": data_args.max_eval_samples,
-        "predict": data_args.max_predict_samples,
+        "test": data_args.max_predict_samples,
     }
     dataset = {}
-    for split_name in ["train", "eval", "predict"]:
+    for split_name in ["train", "eval", "test"]:
         if split_name in raw_datasets:
             dataset[split_name] = prepare_dataset(
                 split_name=split_name,
@@ -496,12 +493,12 @@ def main():
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
-        predict_results = trainer.predict(predict_dataset, metric_key_prefix="predict", max_length=max_seq_length, do_sample=True, top_p=0.7, temperature=0.95)
+        predict_results = trainer.predict(test_dataset, metric_key_prefix="predict", max_length=max_seq_length, do_sample=True, top_p=0.7, temperature=0.95)
         metrics = predict_results.metrics
         max_predict_samples = (
-            data_args.max_predict_samples if data_args.max_predict_samples is not None else len(predict_dataset)
+            data_args.max_predict_samples if data_args.max_predict_samples is not None else len(test_dataset)
         )
-        metrics["predict_samples"] = min(max_predict_samples, len(predict_dataset))
+        metrics["predict_samples"] = min(max_predict_samples, len(test_dataset))
 
         trainer.log_metrics("predict", metrics)
         trainer.save_metrics("predict", metrics)

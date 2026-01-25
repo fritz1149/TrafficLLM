@@ -5,6 +5,7 @@ import json
 import os
 from tqdm import tqdm
 import math
+from transformers import AutoTokenizer
 
 TRAINING_SAMPLE_RATIO = 0.9
 
@@ -49,9 +50,66 @@ def build_data_from_dir(args, files_path, sampling_method=None, max_sampling_num
     samples_per_pcap = -1
     if sampling_method == "average_sampling" and max_sampling_number is not None:
         samples_per_pcap = math.ceil(max_sampling_number / len(pcaps))
+    max_packet_number = getattr(args, "max_packet_number", None)
+    max_token_length = getattr(args, "max_token_length", None)
+    tokenizer_path = getattr(args, "tokenizer_path", None)
+    tokenizer = None
+    enable_packet_loop = (
+        args.granularity == "flow"
+        and max_packet_number is not None
+        and max_token_length is not None
+    )
+    if enable_packet_loop:
+        if tokenizer_path is None:
+            raise ValueError("tokenizer_path is required when max_token_length is set")
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, trust_remote_code=True)
+
+    def exceeds_token_limit(flow_data):
+        if not flow_data:
+            return False
+        prompt_prefix = getattr(args, "prompt_prefix", "") or ""
+        prompt_suffix = getattr(args, "prompt_suffix", "") or ""
+        max_len = max(
+            len(
+                tokenizer(
+                    f"{prompt_prefix}{item}{prompt_suffix}",
+                    add_special_tokens=False,
+                    return_attention_mask=False,
+                    return_token_type_ids=False,
+                ).input_ids
+            )
+            for item in flow_data
+        )
+        return max_len > max_token_length
+
     for pcap in tqdm(pcaps):
         if args.granularity == "flow":
-            pcap_data = build_flow_data(os.path.join(files_path, pcap), args.flow_feature)
+            if enable_packet_loop:
+                current_max = max(1, max_packet_number)
+                invalid_flag = False
+                while True:
+                    if current_max <= 0:
+                        invalid_flag = True
+                        break
+                    pcap_data = build_flow_data(
+                        os.path.join(files_path, pcap),
+                        args.flow_feature,
+                        max_packet_number=current_max,
+                    )
+                    if not exceeds_token_limit(pcap_data):
+                        break
+                    current_max -= 1
+                if invalid_flag:
+                    print("Invalid flow data: ", pcap)
+                    continue
+            elif max_packet_number is not None:
+                pcap_data = build_flow_data(
+                    os.path.join(files_path, pcap),
+                    args.flow_feature,
+                    max_packet_number=max_packet_number,
+                )
+            else:
+                pcap_data = build_flow_data(os.path.join(files_path, pcap), args.flow_feature)
         else:
             pcap_data = build_packet_data(os.path.join(files_path, pcap), samples_per_pcap=samples_per_pcap)
         build_data.extend(pcap_data)
@@ -78,30 +136,28 @@ def build_dataset_from_split(args, path, file):
 
 def save_dataset(args, train_dataset, test_dataset, val_dataset=None):
     write_dataset(train_dataset, os.path.join(args.output_path, args.output_name + "_" + args.traffic_task + "_" +
-                                              args.granularity + "_train.jsonl"))
+                                              args.granularity + "_train.json"))
     write_dataset(test_dataset, os.path.join(args.output_path, args.output_name + "_" + args.traffic_task + "_" +
-                                             args.granularity + "_test.jsonl"))
+                                             args.granularity + "_test.json"))
     if val_dataset is not None:
         write_dataset(val_dataset, os.path.join(args.output_path, args.output_name + "_" + args.traffic_task + "_" +
-                                                 args.granularity + "_val.jsonl"))
+                                                 args.granularity + "_val.json"))
 
 
-def build_td_text_dataset(traffic_data, first_label=None, second_label=None, task_name=None, granularity=None):
-    """Building the text datasets of traffic detection task"""
-    
-    if task_name == "MBD": # Mobile Behavior Detection
+def get_td_prompt_components(task_name, granularity, second_label=None):
+    if task_name == "MBD":  # Mobile Behavior Detection
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                       "traffic features, and payloads. Please conduct the MOBILE BEHAVIOR DETECTION TASK to determine " \
-                       "which type of mobile behavior the traffic belongs to. The categories " \
-                       "include 'sendText, sendAudio, sendImage, shareLocationOnce, transferFile'."
+                      "traffic features, and payloads. Please conduct the MOBILE BEHAVIOR DETECTION TASK to determine " \
+                      "which type of mobile behavior the traffic belongs to. The categories " \
+                      "include 'sendText, sendAudio, sendImage, shareLocationOnce, transferFile'."
         output = second_label
-        
+
     elif task_name == "EMD":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                      "traffic features, and payloads. Please conduct the ENCRYPTED MALWARE DETECTION TASK to determine " \
-                      "which application category the encrypted beign or malicious traffic belongs to. The categories " \
-                      "include 'BitTorrent, FTP, Facetime, Gmail, MySQL, Outlook, SMB, Skype, Weibo, WorldOfWarcraft," \
-                      "Cridex, Geodo, Htbot, Miuref, Neris, Nsis-ay, Shifu, Tinba, Virut, Zeus'."
+                     "traffic features, and payloads. Please conduct the ENCRYPTED MALWARE DETECTION TASK to determine " \
+                     "which application category the encrypted beign or malicious traffic belongs to. The categories " \
+                     "include 'BitTorrent, FTP, Facetime, Gmail, MySQL, Outlook, SMB, Skype, Weibo, WorldOfWarcraft," \
+                     "Cridex, Geodo, Htbot, Miuref, Neris, Nsis-ay, Shifu, Tinba, Virut, Zeus'."
 
         output = second_label
 
@@ -112,10 +168,10 @@ def build_td_text_dataset(traffic_data, first_label=None, second_label=None, tas
 
     elif task_name == "EAC":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                      "traffic features, and payloads. Please conduct the ENCRYPTED APP CLASSIFICATION TASK to determine " \
-                      "which APP category the encrypted traffic belongs to. The categories " \
-                      "include '163Mail, 51cto, Acm, Adobe, Alibaba, Alicdn, Alipay, Amap, AmazonAWS, AmpProject, Apple," \
-                      "Arxiv, Asus, Atlassian, AzureEdge, Baidu, Bilibili, Biligame, Booking, LA'." \
+                     "traffic features, and payloads. Please conduct the ENCRYPTED APP CLASSIFICATION TASK to determine " \
+                     "which APP category the encrypted traffic belongs to. The categories " \
+                     "include '163Mail, 51cto, Acm, Adobe, Alibaba, Alicdn, Alipay, Amap, AmazonAWS, AmpProject, Apple," \
+                     "Arxiv, Asus, Atlassian, AzureEdge, Baidu, Bilibili, Biligame, Booking, LA'."
 
         output = second_label
         # instruction = "Below is a traffic " + granularity + ". Please conduct the encrypted App classification task: "
@@ -124,18 +180,18 @@ def build_td_text_dataset(traffic_data, first_label=None, second_label=None, tas
 
     elif task_name == "EAC2":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                      "traffic features, and payloads. Please conduct the ENCRYPTED APP CLASSIFICATION TASK to determine " \
-                      "which APP category the encrypted traffic belongs to. The categories " \
-                      "include '163, 51la, 51cto, Acm, Adobe, Alibaba, Alicdn, Alipay, Amap, AmazonAWS, AmpProject, Apple, " \
-                      "Arxiv, Asus, Atlassian, AzureEdge, Baidu, Bilibili, Biligame, Booking, Chia, Chinatax, Cisco, Cloudflare, " \
-                      "Cloudfront, Cnblogs, Codepen, Crazyegg, Criteo, Ctrip, Dailymotion, Deepl, Digitaloceanspaces, Duckduckgo, " \
-                      "Eastday, Eastmoney, Elsevier, Facebook, Feishu, Ggpht, Github, Gitlab, Gmail, Goat, Google, Grammarly, " \
-                      "Gravatar, Guancha, Huanqiu, Huawei, Hubspot, Huya, Ibm, Icloud, Ieee, Instagram, Iqiyi, Jb51, Jd, Kugou, " \
-                      "LeetcodeCn, Media, Mi, Microsoft, Mozilla, Msn, Naver, Netflix, Nike, Notion, Nvidia, Office, Onlinedown, " \
-                      "Opera, Oracle, Outbrain, Overleaf, Paypal, Pinduoduo, Python, Qcloud, Qq, Researchgate, Runoob, Sciencedirect, " \
-                      "Semanticscholar, Sina, Smzdm, Snapchat, Sohu, Spring, Springer, Squarespace, Statcounter, Steampowered, " \
-                      "Tco, Taboola, Teads, Thepaper, Tiktok, Toutiao, Twimg, Twitter, Unity3d, V2ex, Vivo, Vk, Vmware, Walmart, " \
-                      "Weibo, Wikimedia, Wikipedia, Wp, Xiaomi, Ximalaya, Yahoo, Yandex, Youtube, Yy, Zhihu'." \
+                     "traffic features, and payloads. Please conduct the ENCRYPTED APP CLASSIFICATION TASK to determine " \
+                     "which APP category the encrypted traffic belongs to. The categories " \
+                     "include '163, 51la, 51cto, Acm, Adobe, Alibaba, Alicdn, Alipay, Amap, AmazonAWS, AmpProject, Apple, " \
+                     "Arxiv, Asus, Atlassian, AzureEdge, Baidu, Bilibili, Biligame, Booking, Chia, Chinatax, Cisco, Cloudflare, " \
+                     "Cloudfront, Cnblogs, Codepen, Crazyegg, Criteo, Ctrip, Dailymotion, Deepl, Digitaloceanspaces, Duckduckgo, " \
+                     "Eastday, Eastmoney, Elsevier, Facebook, Feishu, Ggpht, Github, Gitlab, Gmail, Goat, Google, Grammarly, " \
+                     "Gravatar, Guancha, Huanqiu, Huawei, Hubspot, Huya, Ibm, Icloud, Ieee, Instagram, Iqiyi, Jb51, Jd, Kugou, " \
+                     "LeetcodeCn, Media, Mi, Microsoft, Mozilla, Msn, Naver, Netflix, Nike, Notion, Nvidia, Office, Onlinedown, " \
+                     "Opera, Oracle, Outbrain, Overleaf, Paypal, Pinduoduo, Python, Qcloud, Qq, Researchgate, Runoob, Sciencedirect, " \
+                     "Semanticscholar, Sina, Smzdm, Snapchat, Sohu, Spring, Springer, Squarespace, Statcounter, Steampowered, " \
+                     "Tco, Taboola, Teads, Thepaper, Tiktok, Toutiao, Twimg, Twitter, Unity3d, V2ex, Vivo, Vk, Vmware, Walmart, " \
+                     "Weibo, Wikimedia, Wikipedia, Wp, Xiaomi, Ximalaya, Yahoo, Yandex, Youtube, Yy, Zhihu'."
 
         output = second_label
         # instruction = "Below is a traffic " + granularity + ". Please conduct the encrypted App classification task: "
@@ -144,9 +200,9 @@ def build_td_text_dataset(traffic_data, first_label=None, second_label=None, tas
 
     elif task_name == "BND":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                       "traffic features, and payloads. Please conduct the BOTNET DETECTION TASK to determine " \
-                       "which type of network the traffic belongs to. The categories " \
-                       "include 'IRC, Neris, RBot, Virut, normal'."
+                      "traffic features, and payloads. Please conduct the BOTNET DETECTION TASK to determine " \
+                      "which type of network the traffic belongs to. The categories " \
+                      "include 'IRC, Neris, RBot, Virut, normal'."
 
         output = second_label
         # instruction = "Below is a traffic " + granularity + ". Please conduct the botnet detection task: "
@@ -155,10 +211,10 @@ def build_td_text_dataset(traffic_data, first_label=None, second_label=None, tas
 
     elif task_name == "EVD":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                      "traffic features, and payloads. Please conduct the TRAFFIC DETECTION TASK to determine " \
-                      "which behavior or application category the encrypted traffic belongs to. The categories " \
-                      "include 'aim, bittorrent, email, gmail, facebook, ftps, hangouts, icq, netflix, scp, skype, spotify, " \
-                      "tor, torrent, vimeo, voipbuster, vpn-ftps, vpn-sftp, youtube'."
+                     "traffic features, and payloads. Please conduct the TRAFFIC DETECTION TASK to determine " \
+                     "which behavior or application category the encrypted traffic belongs to. The categories " \
+                     "include 'aim, bittorrent, email, gmail, facebook, ftps, hangouts, icq, netflix, scp, skype, spotify, " \
+                     "tor, torrent, vimeo, voipbuster, vpn-ftps, vpn-sftp, youtube'."
 
         output = second_label
 
@@ -168,32 +224,33 @@ def build_td_text_dataset(traffic_data, first_label=None, second_label=None, tas
 
     elif task_name == "EVD2":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                      "traffic features, and payloads. Please conduct the TRAFFIC DETECTION TASK to determine " \
-                      "which behavior or application category the encrypted traffic belongs to. " \
-                      "Some categories are traffic transmitted via VPN，while others are not. The categories " \
-                      "include 'chat, emial, ft, p2p, stream, voip, vpn-chat, vpn-email, vpn-ft, vpn-p2p, " \
-                      "vpn-stream, vpn-voip'."
+                     "traffic features, and payloads. Please conduct the TRAFFIC DETECTION TASK to determine " \
+                     "which behavior or application category the encrypted traffic belongs to. " \
+                     "Some categories are traffic transmitted via VPN，while others are not. The categories " \
+                     "include 'chat, emial, ft, p2p, stream, voip, vpn-chat, vpn-email, vpn-ft, vpn-p2p, " \
+                     "vpn-stream, vpn-voip'."
 
         output = second_label
 
     elif task_name == "MDD":
         instruction = "Below is a traffic " + granularity + ". Please conduct the malicious DoH detection task: "
-
-        output = "The traffic category is likely to be recognized as " + second_label + "."
+        output = ""
+        if second_label:
+            output = "The traffic category is likely to be recognized as " + second_label + "."
 
     elif task_name == "TBD":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                      "traffic features, and payloads. Please conduct the TOR BEHAVIOR DETECTION TASK to determine " \
-                      "which behavior or application category the traffic belongs to under the Tor network. " \
-                      "The categories include 'audio, browsing, chat, file, mail, p2p, video, voip'."
+                     "traffic features, and payloads. Please conduct the TOR BEHAVIOR DETECTION TASK to determine " \
+                     "which behavior or application category the traffic belongs to under the Tor network. " \
+                     "The categories include 'audio, browsing, chat, file, mail, p2p, video, voip'."
 
         output = second_label
 
     elif task_name == "APT":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
-                                                                           "traffic features, and payloads. Please conduct the APT DETECTION TASK to determine " \
-                                                                           "which behavior or application category the traffic belongs to under the APT attacks. " \
-                                                                           "The categories include 'APT and normal'."
+                                                                          "traffic features, and payloads. Please conduct the APT DETECTION TASK to determine " \
+                                                                          "which behavior or application category the traffic belongs to under the APT attacks. " \
+                                                                          "The categories include 'APT and normal'."
 
         output = second_label
 
@@ -215,6 +272,26 @@ def build_td_text_dataset(traffic_data, first_label=None, second_label=None, tas
     #     instruction = "Below is a traffic " + granularity + ". Please conduct the scareware traffic detection task: "
     #
     #     output = "The traffic category is likely to be recognized as " + second_label + "."
+
+    return instruction, output
+
+
+def get_td_prompt_prefix_suffix(task_name, granularity):
+    instruction, _ = get_td_prompt_components(
+        task_name=task_name,
+        granularity=granularity,
+        second_label="",
+    )
+    return f"{instruction}\n<{granularity}>: ", ""
+
+
+def build_td_text_dataset(traffic_data, first_label=None, second_label=None, task_name=None, granularity=None):
+    """Building the text datasets of traffic detection task"""
+    instruction, output = get_td_prompt_components(
+        task_name=task_name,
+        granularity=granularity,
+        second_label=second_label,
+    )
 
     dataset = []
     for data in traffic_data:
