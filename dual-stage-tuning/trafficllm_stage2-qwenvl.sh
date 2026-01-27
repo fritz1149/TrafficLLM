@@ -12,7 +12,7 @@ export MODEL=qwen;
 # 创建日志目录;
 mkdir -p ../logs/train;
 
-source /opt/anaconda3/etc/profile.d/conda.sh
+source /work/miniconda3/etc/profile.d/conda.sh
 conda activate trafficllm-qwenvl
 
 dataset_name=qq;
