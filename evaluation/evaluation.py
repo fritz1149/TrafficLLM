@@ -59,9 +59,9 @@ def td_evaluation(predict_responses, target_responses, label_file):
             preds.append(len(label_dict.keys()))
 
     print("acc:", accuracy_score(labels, preds))
-    print("precision:", precision_score(labels, preds, average='weighted'))
-    print("recall:", recall_score(labels, preds, average='weighted'))
-    print("f1:", f1_score(labels, preds, average='weighted'))
+    print("precision:", precision_score(labels, preds, average='macro'))
+    print("recall:", recall_score(labels, preds, average='macro'))
+    print("f1:", f1_score(labels, preds, average='macro'))
     print("confusion matrix:\n", confusion_matrix(labels, preds))
     print("classification report:\n", classification_report(labels, preds))
 

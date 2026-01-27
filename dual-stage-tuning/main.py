@@ -22,6 +22,7 @@ import logging
 import os
 import sys
 import json
+import importlib.util
 
 import numpy as np
 from datasets import load_dataset
@@ -96,8 +97,10 @@ def main():
         extension = data_args.train_file.split(".")[-1]
     if data_args.validation_file is not None:
         data_files["eval"] = data_args.validation_file
+        extension = data_args.validation_file.split(".")[-1]
     if data_args.test_file is not None:
         data_files["test"] = data_args.test_file
+        extension = data_args.test_file.split(".")[-1]
 
     raw_datasets = load_dataset(
         extension,
@@ -107,6 +110,17 @@ def main():
     )
     # Load pretrained model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+    qwen_vl_torch_dtype = None
+    if model_args.model_base == 'qwen-vl' and (not training_args.fp16) and (not training_args.bf16):
+        if torch.cuda.is_available() and getattr(torch.cuda, "is_bf16_supported", lambda: False)():
+            training_args.bf16 = True
+        else:
+            training_args.fp16 = True
+    if model_args.model_base == 'qwen-vl':
+        if training_args.bf16:
+            qwen_vl_torch_dtype = torch.bfloat16
+        elif training_args.fp16:
+            qwen_vl_torch_dtype = torch.float16
     
     if model_args.model_base == 'qwen':
         model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path)
@@ -115,9 +129,21 @@ def main():
         model = get_peft_model(model, peft_config)
     elif model_args.model_base == 'qwen-vl':
         from transformers import Qwen3VLForConditionalGeneration
-        model = Qwen3VLForConditionalGeneration.from_pretrained(model_args.model_name_or_path)
+        if model_args.flash_attn:
+            model = Qwen3VLForConditionalGeneration.from_pretrained(
+                model_args.model_name_or_path,
+                torch_dtype=qwen_vl_torch_dtype,
+                low_cpu_mem_usage=True,
+                attn_implementation="flash_attention_2"
+            )
+        else:
+            model = Qwen3VLForConditionalGeneration.from_pretrained(
+                model_args.model_name_or_path,
+                torch_dtype=qwen_vl_torch_dtype,
+                low_cpu_mem_usage=True
+            )
         from peft import PrefixTuningConfig, get_peft_model, TaskType
-        peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=model_args.pre_seq_len)
+        peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=model_args.pre_seq_len, prefix_projection=model_args.prefix_projection)
         model = get_peft_model(model, peft_config)
         QWENVL_PAD_TOKEN = tokenizer.special_tokens_map.get("pad_token", None)
         assert QWENVL_PAD_TOKEN is not None
@@ -127,6 +153,15 @@ def main():
         config.pre_seq_len = model_args.pre_seq_len
         config.prefix_projection = model_args.prefix_projection
         model = AutoModel.from_pretrained(model_args.model_name_or_path, config=config, trust_remote_code=True)
+
+    print("trainable parameters: ", end="")
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            print(name)
+    # model.print_trainable_parameters()
+    # print(model.active_peft_config.inference_mode)
+    # print(model)
+    # return
 
     # TODO：待修改或添加（若用到）
     if model_args.ptuning_checkpoint is not None:
@@ -148,14 +183,18 @@ def main():
     # TODO：待修改或添加（若报错）
     if model_args.pre_seq_len is not None:
         # P-tuning v2
-        model = model.half()
-        if not model_args.model_base.startswith('qwen'):
-            model.transformer.prefix_encoder.float()
-        else:
+        if model_args.model_base == 'qwen-vl':
             model.prompt_encoder.default.float()
+        else:
+            model = model.half()
+            if not model_args.model_base.startswith('qwen'):
+                model.transformer.prefix_encoder.float()
+            else:
+                model.prompt_encoder.default.float()
     else:
         # Finetune
-        model = model.float()
+        if model_args.model_base != 'qwen-vl':
+            model = model.float()
 
     prefix = data_args.source_prefix if data_args.source_prefix is not None else ""
 
@@ -163,6 +202,10 @@ def main():
     # We need to tokenize inputs and targets.
     if training_args.do_train:
         column_names = raw_datasets["train"].column_names
+    elif training_args.do_eval:
+        column_names = raw_datasets["eval"].column_names
+    elif training_args.do_predict:
+        column_names = raw_datasets["test"].column_names
     else:
         logger.info("There is nothing to do. Please pass `do_train`, `do_eval` and/or `do_predict`.")
         return
@@ -191,17 +234,14 @@ def main():
                     origin_len = len(input_ids)
                     assert origin_len <= data_args.max_source_length
                     pad_len = data_args.max_source_length - origin_len
-                    input_ids = input_ids + [QWENVL_PAD_ID] * pad_len
-                    attention_mask = [1] * origin_len + [0] * pad_len
+                    input_ids = [QWENVL_PAD_ID] * pad_len + input_ids
+                    attention_mask = [0] * pad_len + [1] * origin_len
 
                     answer = f"{answer}<|im_end|>"
                     labels = tokenizer.encode(answer)
                     assert len(labels) <= max_target_length
                     pad_len = max_target_length - len(labels)
-                    if data_args.ignore_pad_token_for_loss:
-                        labels = labels + [-100] * pad_len
-                    else:
-                        labels = labels + [QWENVL_PAD_ID] * pad_len
+                    labels = labels + [QWENVL_PAD_ID] * pad_len
 
                     model_inputs["input_ids"].append(input_ids)
                     model_inputs["attention_mask"].append(attention_mask)
@@ -377,9 +417,12 @@ def main():
                 require_message=f"--do_{split_name} requires a {split_name} dataset",
                 print_example=(split_name == "train"),
             )
-    train_dataset = dataset["train"]
-    eval_dataset = dataset["eval"]
-    test_dataset = dataset["test"]
+    if training_args.do_train:
+        train_dataset = dataset["train"]
+    if training_args.do_eval:
+        eval_dataset = dataset["eval"]
+    if training_args.do_predict:
+        test_dataset = dataset["test"]
 
     # Metric
     def compute_metrics(eval_preds):
@@ -439,7 +482,7 @@ def main():
             pad_to_multiple_of=None,
             padding=False
         ),
-        compute_metrics=compute_metrics if training_args.predict_with_generate else None,
+        # compute_metrics=compute_metrics if training_args.predict_with_generate else None,
         save_changed=model_args.pre_seq_len is not None
     )
     # elif model_args.model_base == 'qwen':
@@ -464,11 +507,19 @@ def main():
             checkpoint = training_args.resume_from_checkpoint
         # elif last_checkpoint is not None:
         #     checkpoint = last_checkpoint
-        if model_args.model_base == 'chatglm':
+        if model_args.model_base == 'qwen-vl':
+            pass
+        else:
             model.gradient_checkpointing_enable()
             model.enable_input_require_grads()
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
         trainer.save_model()  # Saves the tokenizer too for easy upload
+
+        if model_args.model_base == 'qwen-vl':
+            pass
+        else:
+            model.gradient_checkpointing_disable()
+            model.disable_input_require_grads()
 
         metrics = train_result.metrics
         max_train_samples = (
@@ -509,8 +560,9 @@ def main():
                     predict_results.predictions, skip_special_tokens=True, clean_up_tokenization_spaces=True
                 )
                 predictions = [pred.strip() for pred in predictions]
+                label_ids = predict_results.label_ids
                 labels = tokenizer.batch_decode(
-                    predict_results.label_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
+                    label_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
                 )
                 labels = [label.strip() for label in labels]
                 output_prediction_file = os.path.join(training_args.output_dir, "generated_predictions.txt")
@@ -518,6 +570,28 @@ def main():
                     for p, l in zip(predictions, labels):
                         res = json.dumps({"labels": l, "predict": p}, ensure_ascii=False)
                         writer.write(f"{res}\n")
+
+                label_dir = os.path.dirname(data_args.test_file) if data_args.test_file else None
+                label_file = None
+                if label_dir:
+                    label_files = [f for f in os.listdir(label_dir) if f.endswith('_label.json')]
+                    if len(label_files) == 1:
+                        label_file = os.path.join(label_dir, label_files[0])
+                    elif len(label_files) > 1:
+                        raise ValueError(f"Found multiple label files in {label_dir}: {label_files}")
+                if label_file is not None and os.path.exists(label_file):
+                    try:
+                        eval_py = os.path.abspath(
+                            os.path.join(os.path.dirname(__file__), "..", "evaluation", "evaluation.py")
+                        )
+                        spec = importlib.util.spec_from_file_location("trafficllm_evaluation", eval_py)
+                        evaluation_module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(evaluation_module)
+                        evaluation_module.td_evaluation(predictions, labels, label_file)
+                    except Exception as e:
+                        logger.warning(f"td_evaluation failed: {e}")
+                else:
+                    logger.warning("LABEL_FILE env var is not set or path does not exist; skip td_evaluation")
 
 def _mp_fn(index):
     # For xla_spawn (TPUs)

@@ -62,6 +62,9 @@ class ModelArguments:
     model_base: str = field(
         default=None
     )
+    flash_attn: bool = field(
+        default=False
+    )
 
 
 @dataclass

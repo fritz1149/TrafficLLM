@@ -1,0 +1,347 @@
+no change     /home/changc/miniconda3/condabin/conda
+no change     /home/changc/miniconda3/bin/conda
+no change     /home/changc/miniconda3/bin/conda-env
+no change     /home/changc/miniconda3/bin/activate
+no change     /home/changc/miniconda3/bin/deactivate
+no change     /home/changc/miniconda3/etc/profile.d/conda.sh
+no change     /home/changc/miniconda3/etc/fish/conf.d/conda.fish
+no change     /home/changc/miniconda3/shell/condabin/Conda.psm1
+no change     /home/changc/miniconda3/shell/condabin/conda-hook.ps1
+no change     /home/changc/miniconda3/lib/python3.12/site-packages/xontrib/conda.xsh
+no change     /home/changc/miniconda3/etc/profile.d/conda.csh
+modified      /root/.bashrc
+
+==> For changes to take effect, close and re-open your current shell. <==
+
+/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/jieba/_compat.py:18: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+01/25/2026 12:49:14 - WARNING - __main__ - Process rank: 0, device: cuda:0, n_gpu: 1distributed training: True, 16-bits training: False
+01/25/2026 12:49:14 - INFO - __main__ - Training/evaluation parameters Seq2SeqTrainingArguments(
+_n_gpu=1,
+accelerator_config={'split_batches': False, 'dispatch_batches': None, 'even_batches': True, 'use_seedable_sampler': True, 'non_blocking': False, 'gradient_accumulation_kwargs': None, 'use_configured_state': False},
+adafactor=False,
+adam_beta1=0.9,
+adam_beta2=0.999,
+adam_epsilon=1e-08,
+auto_find_batch_size=False,
+average_tokens_across_devices=True,
+batch_eval_metrics=False,
+bf16=False,
+bf16_full_eval=False,
+data_seed=None,
+dataloader_drop_last=False,
+dataloader_num_workers=0,
+dataloader_persistent_workers=False,
+dataloader_pin_memory=True,
+dataloader_prefetch_factor=None,
+ddp_backend=None,
+ddp_broadcast_buffers=None,
+ddp_bucket_cap_mb=None,
+ddp_find_unused_parameters=None,
+ddp_timeout=1800,
+debug=[],
+deepspeed=None,
+disable_tqdm=False,
+do_eval=True,
+do_predict=False,
+do_train=False,
+eval_accumulation_steps=None,
+eval_delay=0,
+eval_do_concat_batches=True,
+eval_on_start=False,
+eval_steps=None,
+eval_strategy=IntervalStrategy.NO,
+eval_use_gather_object=False,
+fp16=False,
+fp16_backend=auto,
+fp16_full_eval=False,
+fp16_opt_level=O1,
+fsdp=[],
+fsdp_config={'min_num_params': 0, 'xla': False, 'xla_fsdp_v2': False, 'xla_fsdp_grad_ckpt': False},
+fsdp_min_num_params=0,
+fsdp_transformer_layer_cls_to_wrap=None,
+full_determinism=False,
+generation_config=None,
+generation_max_length=None,
+generation_num_beams=None,
+gradient_accumulation_steps=16,
+gradient_checkpointing=False,
+gradient_checkpointing_kwargs=None,
+greater_is_better=None,
+group_by_length=False,
+half_precision_backend=auto,
+hub_always_push=False,
+hub_model_id=None,
+hub_private_repo=None,
+hub_revision=None,
+hub_strategy=HubStrategy.EVERY_SAVE,
+hub_token=<HUB_TOKEN>,
+ignore_data_skip=False,
+include_for_metrics=[],
+include_inputs_for_metrics=False,
+include_num_input_tokens_seen=no,
+include_tokens_per_second=False,
+jit_mode_eval=False,
+label_names=None,
+label_smoothing_factor=0.0,
+learning_rate=0.02,
+length_column_name=length,
+liger_kernel_config=None,
+load_best_model_at_end=False,
+local_rank=0,
+log_level=passive,
+log_level_replica=warning,
+log_on_each_node=True,
+logging_dir=../models/Qwen3-VL-8B-Instruct/qq/500/runs/Jan25_12-49-14_sg-changc-260125-dc296-default0-0,
+logging_first_step=False,
+logging_nan_inf_filter=True,
+logging_steps=5,
+logging_strategy=IntervalStrategy.STEPS,
+lr_scheduler_kwargs=None,
+lr_scheduler_type=SchedulerType.LINEAR,
+max_grad_norm=1.0,
+max_steps=-1,
+metric_for_best_model=None,
+mp_parameters=,
+neftune_noise_alpha=None,
+no_cuda=False,
+num_train_epochs=10.0,
+optim=OptimizerNames.ADAMW_TORCH_FUSED,
+optim_args=None,
+optim_target_modules=None,
+output_dir=../models/Qwen3-VL-8B-Instruct/qq/500,
+overwrite_output_dir=True,
+parallelism_config=None,
+past_index=-1,
+per_device_eval_batch_size=1,
+per_device_train_batch_size=1,
+predict_with_generate=False,
+prediction_loss_only=False,
+project=huggingface,
+push_to_hub=False,
+push_to_hub_model_id=None,
+push_to_hub_organization=None,
+push_to_hub_token=<PUSH_TO_HUB_TOKEN>,
+ray_scope=last,
+remove_unused_columns=False,
+report_to=[],
+restore_callback_states_from_checkpoint=False,
+resume_from_checkpoint=None,
+run_name=None,
+save_on_each_node=False,
+save_only_model=False,
+save_safetensors=True,
+save_steps=100,
+save_strategy=SaveStrategy.STEPS,
+save_total_limit=None,
+seed=42,
+skip_memory_metrics=True,
+sortish_sampler=False,
+tf32=None,
+torch_compile=False,
+torch_compile_backend=None,
+torch_compile_mode=None,
+torch_empty_cache_steps=None,
+torchdynamo=None,
+tpu_metrics_debug=False,
+tpu_num_cores=None,
+trackio_space_id=trackio,
+use_cpu=False,
+use_legacy_prediction_loop=False,
+use_liger_kernel=False,
+use_mps_device=False,
+warmup_ratio=0.0,
+warmup_steps=0,
+weight_decay=0.0,
+)
+[INFO|tokenization_utils_base.py:2109] 2026-01-25 12:49:16,847 >> loading file vocab.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-25 12:49:16,848 >> loading file merges.txt
+[INFO|tokenization_utils_base.py:2109] 2026-01-25 12:49:16,848 >> loading file tokenizer.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-25 12:49:16,848 >> loading file added_tokens.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-25 12:49:16,848 >> loading file special_tokens_map.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-25 12:49:16,848 >> loading file tokenizer_config.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-25 12:49:16,848 >> loading file chat_template.jinja
+[INFO|tokenization_utils_base.py:2380] 2026-01-25 12:49:17,344 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|configuration_utils.py:763] 2026-01-25 12:49:17,371 >> loading configuration file ../../Bishe/Qwen3-VL-8B-Instruct/config.json
+[INFO|configuration_utils.py:839] 2026-01-25 12:49:17,374 >> Model config Qwen3VLConfig {
+  "architectures": [
+    "Qwen3VLForConditionalGeneration"
+  ],
+  "image_token_id": 151655,
+  "model_type": "qwen3_vl",
+  "text_config": {
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 4096,
+    "initializer_range": 0.02,
+    "intermediate_size": 12288,
+    "max_position_embeddings": 262144,
+    "model_type": "qwen3_vl_text",
+    "num_attention_heads": 32,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 8,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "mrope_interleaved": true,
+      "mrope_section": [
+        24,
+        20,
+        20
+      ],
+      "rope_type": "default"
+    },
+    "rope_theta": 5000000,
+    "use_cache": true,
+    "vocab_size": 151936
+  },
+  "tie_word_embeddings": false,
+  "transformers_version": "4.57.6",
+  "video_token_id": 151656,
+  "vision_config": {
+    "deepstack_visual_indexes": [
+      8,
+      16,
+      24
+    ],
+    "depth": 27,
+    "hidden_act": "gelu_pytorch_tanh",
+    "hidden_size": 1152,
+    "in_channels": 3,
+    "initializer_range": 0.02,
+    "intermediate_size": 4304,
+    "model_type": "qwen3_vl",
+    "num_heads": 16,
+    "num_position_embeddings": 2304,
+    "out_hidden_size": 4096,
+    "patch_size": 16,
+    "spatial_merge_size": 2,
+    "temporal_patch_size": 2
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652
+}
+
+[INFO|modeling_utils.py:1169] 2026-01-25 12:49:17,374 >> loading weights file ../../Bishe/Qwen3-VL-8B-Instruct/model.safetensors.index.json
+[INFO|configuration_utils.py:986] 2026-01-25 12:49:17,377 >> Generate config GenerationConfig {}
+
+[INFO|modeling_utils.py:2341] 2026-01-25 12:49:17,378 >> Instantiating Qwen3VLVisionModel model under default dtype torch.float32.
+[INFO|modeling_utils.py:2341] 2026-01-25 12:49:17,443 >> Instantiating Qwen3VLTextModel model under default dtype torch.float32.
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:10<00:32, 10.77s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:21<00:21, 10.88s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:32<00:10, 10.96s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:38<00:00,  9.03s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:38<00:00,  9.71s/it]
+[INFO|configuration_utils.py:939] 2026-01-25 12:49:56,379 >> loading configuration file ../../Bishe/Qwen3-VL-8B-Instruct/generation_config.json
+[INFO|configuration_utils.py:986] 2026-01-25 12:49:56,380 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "do_sample": true,
+  "eos_token_id": [
+    151645,
+    151643
+  ],
+  "pad_token_id": 151643,
+  "temperature": 0.7,
+  "top_k": 20,
+  "top_p": 0.8
+}
+
+[INFO|dynamic_module_utils.py:423] 2026-01-25 12:49:56,380 >> Could not locate the custom_generate/generate.py inside ../../Bishe/Qwen3-VL-8B-Instruct.
+trainable parameters: prompt_encoder.default.embedding.weight
+Running tokenizer on eval dataset (num_proc=10): 100%|██████████| 250/250 [00:00<?, ? examples/s]Running tokenizer on eval dataset (num_proc=10): 275 examples [00:07,  3.25 examples/s]          Running tokenizer on eval dataset (num_proc=10): 300 examples [00:08,  6.46 examples/s]Running tokenizer on eval dataset (num_proc=10): 325 examples [00:10,  9.48 examples/s]Running tokenizer on eval dataset (num_proc=10): 350 examples [00:11, 12.58 examples/s]Running tokenizer on eval dataset (num_proc=10): 375 examples [00:11, 15.77 examples/s]Running tokenizer on eval dataset (num_proc=10): 400 examples [00:12, 18.51 examples/s]Running tokenizer on eval dataset (num_proc=10): 425 examples [00:13, 22.83 examples/s]Running tokenizer on eval dataset (num_proc=10): 450 examples [00:13, 27.77 examples/s]Running tokenizer on eval dataset (num_proc=10): 475 examples [00:14, 33.35 examples/s]Running tokenizer on eval dataset (num_proc=10): 500 examples [00:14, 43.81 examples/s]Running tokenizer on eval dataset (num_proc=10): 500 examples [00:18, 13.52 examples/s]
+/home/changc/TrafficLLM/dual-stage-tuning/trainer.py:34: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Seq2SeqTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+01/25/2026 12:51:00 - INFO - __main__ - *** Evaluate ***
+[INFO|trainer.py:4643] 2026-01-25 12:51:00,104 >> 
+***** Running Evaluation *****
+[INFO|trainer.py:4645] 2026-01-25 12:51:00,104 >>   Num examples = 250
+[INFO|trainer.py:4648] 2026-01-25 12:51:00,105 >>   Batch size = 1
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/home/changc/TrafficLLM/dual-stage-tuning/main.py", line 542, in <module>
+[rank0]:     main()
+[rank0]:   File "/home/changc/TrafficLLM/dual-stage-tuning/main.py", line 501, in main
+[rank0]:     metrics = trainer.evaluate(metric_key_prefix="eval", do_sample=True, top_p=0.7, max_length=max_seq_length, temperature=0.95)
+[rank0]:               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/TrafficLLM/dual-stage-tuning/trainer_seq2seq.py", line 79, in evaluate
+[rank0]:     return super().evaluate(eval_dataset, ignore_keys=ignore_keys, metric_key_prefix=metric_key_prefix)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/transformers/trainer.py", line 4489, in evaluate
+[rank0]:     output = eval_loop(
+[rank0]:              ^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/transformers/trainer.py", line 4685, in evaluation_loop
+[rank0]:     losses, logits, labels = self.prediction_step(model, inputs, prediction_loss_only, ignore_keys=ignore_keys)
+[rank0]:                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/TrafficLLM/dual-stage-tuning/trainer_seq2seq.py", line 168, in prediction_step
+[rank0]:     return super().prediction_step(
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/transformers/trainer.py", line 4902, in prediction_step
+[rank0]:     loss, outputs = self.compute_loss(
+[rank0]:                     ^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/transformers/trainer.py", line 4110, in compute_loss
+[rank0]:     outputs = model(**inputs)
+[rank0]:               ^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/peft/peft_model.py", line 1964, in forward
+[rank0]:     return self.base_model(input_ids=input_ids, inputs_embeds=inputs_embeds, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/transformers/utils/generic.py", line 1072, in wrapper
+[rank0]:     outputs = func(self, *args, **kwargs)
+[rank0]:               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/transformers/models/qwen3_vl/modeling_qwen3_vl.py", line 1390, in forward
+[rank0]:     loss = self.loss_function(logits=logits, labels=labels, vocab_size=self.config.text_config.vocab_size)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/transformers/loss/loss_utils.py", line 67, in ForCausalLMLoss
+[rank0]:     loss = fixed_cross_entropy(logits, shift_labels, num_items_in_batch, ignore_index, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/transformers/loss/loss_utils.py", line 36, in fixed_cross_entropy
+[rank0]:     loss = nn.functional.cross_entropy(source, target, ignore_index=ignore_index, reduction=reduction)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/nn/functional.py", line 3504, in cross_entropy
+[rank0]:     return torch._C._nn.cross_entropy_loss(
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]: ValueError: Expected input batch_size (5220) to match target batch_size (32).
+[rank0]:[W125 12:51:06.243653885 ProcessGroupNCCL.cpp:1553] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+E0125 12:51:07.337000 44 site-packages/torch/distributed/elastic/multiprocessing/api.py:984] failed (exitcode: 1) local_rank: 0 (pid: 50) of binary: /home/changc/miniconda3/envs/trafficllm-qwenvl/bin/python3.11
+Traceback (most recent call last):
+  File "/home/changc/miniconda3/envs/trafficllm-qwenvl/bin/torchrun", line 7, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 362, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/distributed/run.py", line 991, in main
+    run(args)
+  File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/distributed/run.py", line 982, in run
+    elastic_launch(
+  File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 170, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 317, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+main.py FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-01-25_12:51:07
+  host      : sg-changc-260125-dc296-default0-0.sg-changc-260125-dc296.crater-workspace.svc.cluster.local
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 50)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

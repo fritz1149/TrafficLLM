@@ -84,6 +84,8 @@ def build_data_from_dir(args, files_path, sampling_method=None, max_sampling_num
 
     for pcap in tqdm(pcaps):
         if args.granularity == "flow":
+            if args.max_sampling_number is not None and len(build_data) >= args.max_sampling_number:
+                break
             if enable_packet_loop:
                 current_max = max(1, max_packet_number)
                 invalid_flag = False

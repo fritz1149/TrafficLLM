@@ -1,1 +1,344 @@
-{"instruction": "Given the following traffic data <flow> that contains protocol fields, traffic features, and payloads. Please conduct the MOBILE BEHAVIOR DETECTION TASK to determine which type of mobile behavior the traffic belongs to. The categories include 'sendText, sendAudio, sendImage, shareLocationOnce, transferFile'.\n<flow>: <pck>frame.encap_type: 1, frame.time: Jan  9, 2025 06:47:36.857958000 UTC, frame.offset_shift: 0.000000000, frame.time_epoch: 1736405256.857958000, frame.time_delta: 0.000000000, frame.time_relative: 0.000000000, frame.number: 1, frame.len: 1486, frame.marked: False, frame.protocols: eth:ethertype:ip:tcp:data, ip.version: 4, ip.hdr_len: 20, ip.dsfield: 0x40, ip.dsfield.dscp: 16, ip.dsfield.ecn: 0, ip.len: 1472, ip.id: 0xbf4d, ip.flags: 0x02, ip.flags.rb: False, ip.flags.df: True, ip.flags.mf: False, ip.frag_offset: 0, ip.ttl: 242, ip.proto: 6, ip.checksum: 0x6202, ip.checksum.status: 2, ip.src: 56.127.178.8, ip.dst: 136.121.214.147, tcp.srcport: 25888, tcp.dstport: 9504, tcp.stream: 0, tcp.len: 1432, tcp.seq: 1, tcp.nxtseq: 1433, tcp.ack: 1, tcp.hdr_len: 20, tcp.flags: 0x0010, tcp.flags.res: False, tcp.flags.cwr: False, tcp.flags.urg: False, tcp.flags.ack: True, tcp.flags.push: False, tcp.flags.reset: False, tcp.flags.syn: False, tcp.flags.fin: False, tcp.flags.str: \u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7A\u00b7\u00b7\u00b7\u00b7, tcp.window_size: 501, tcp.window_size_scalefactor: -1, tcp.checksum: 0x00cb, tcp.checksum.status: 2, tcp.urgent_pointer: 0, tcp.time_relative: 0.000000000, tcp.time_delta: 0.000000000, tcp.analysis.bytes_in_flight: 1432, tcp.analysis.push_bytes_sent: 1432, tcp.payload: , data.len: 1432<pck>frame.encap_type: 1, frame.time: Jan  9, 2025 06:47:36.857979000 UTC, frame.offset_shift: 0.000000000, frame.time_epoch: 1736405256.857979000, frame.time_delta: 0.000021000, frame.time_relative: 0.000021000, frame.number: 2, frame.len: 1486, frame.marked: False, frame.protocols: eth:ethertype:ip:tcp:data, ip.version: 4, ip.hdr_len: 20, ip.dsfield: 0x40, ip.dsfield.dscp: 16, ip.dsfield.ecn: 0, ip.len: 1472, ip.id: 0xbf4e, ip.flags: 0x02, ip.flags.rb: False, ip.flags.df: True, ip.flags.mf: False, ip.frag_offset: 0, ip.ttl: 242, ip.proto: 6, ip.checksum: 0x6201, ip.checksum.status: 2, ip.src: 56.127.178.8, ip.dst: 136.121.214.147, tcp.srcport: 25888, tcp.dstport: 9504, tcp.stream: 0, tcp.len: 1432, tcp.seq: 1433, tcp.nxtseq: 2865, tcp.ack: 1, tcp.hdr_len: 20, tcp.flags: 0x0010, tcp.flags.res: False, tcp.flags.cwr: False, tcp.flags.urg: False, tcp.flags.ack: True, tcp.flags.push: False, tcp.flags.reset: False, tcp.flags.syn: False, tcp.flags.fin: False, tcp.flags.str: \u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7A\u00b7\u00b7\u00b7\u00b7, tcp.window_size: 501, tcp.window_size_scalefactor: -1, tcp.checksum: 0xd016, tcp.checksum.status: 2, tcp.urgent_pointer: 0, tcp.time_relative: 0.000021000, tcp.time_delta: 0.000021000, tcp.analysis.bytes_in_flight: 2864, tcp.analysis.push_bytes_sent: 2864, tcp.payload: , data.len: 1432<pck>frame.encap_type: 1, frame.time: Jan  9, 2025 06:47:36.857986000 UTC, frame.offset_shift: 0.000000000, frame.time_epoch: 1736405256.857986000, frame.time_delta: 0.000007000, frame.time_relative: 0.000028000, frame.number: 3, frame.len: 1486, frame.marked: False, frame.protocols: eth:ethertype:ip:tcp:data, ip.version: 4, ip.hdr_len: 20, ip.dsfield: 0x40, ip.dsfield.dscp: 16, ip.dsfield.ecn: 0, ip.len: 1472, ip.id: 0xbf4f, ip.flags: 0x02, ip.flags.rb: False, ip.flags.df: True, ip.flags.mf: False, ip.frag_offset: 0, ip.ttl: 242, ip.proto: 6, ip.checksum: 0x6200, ip.checksum.status: 2, ip.src: 56.127.178.8, ip.dst: 136.121.214.147, tcp.srcport: 25888, tcp.dstport: 9504, tcp.stream: 0, tcp.len: 1432, tcp.seq: 2865, tcp.nxtseq: 4297, tcp.ack: 1, tcp.hdr_len: 20, tcp.flags: 0x0010, tcp.flags.res: False, tcp.flags.cwr: False, tcp.flags.urg: False, tcp.flags.ack: True, tcp.flags.push: False, tcp.flags.reset: False, tcp.flags.syn: False, tcp.flags.fin: False, tcp.flags.str: \u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7A\u00b7\u00b7\u00b7\u00b7, tcp.window_size: 501, tcp.window_size_scalefactor: -1, tcp.checksum: 0x2f71, tcp.checksum.status: 2, tcp.urgent_pointer: 0, tcp.time_relative: 0.000028000, tcp.time_delta: 0.000007000, tcp.analysis.bytes_in_flight: 4296, tcp.analysis.push_bytes_sent: 4296, tcp.payload: , data.len: 1432<pck>frame.encap_type: 1, frame.time: Jan  9, 2025 06:47:36.857992000 UTC, frame.offset_shift: 0.000000000, frame.time_epoch: 1736405256.857992000, frame.time_delta: 0.000006000, frame.time_relative: 0.000034000, frame.number: 4, frame.len: 1486, frame.marked: False, frame.protocols: eth:ethertype:ip:tcp:data, ip.version: 4, ip.hdr_len: 20, ip.dsfield: 0x40, ip.dsfield.dscp: 16, ip.dsfield.ecn: 0, ip.len: 1472, ip.id: 0xbf50, ip.flags: 0x02, ip.flags.rb: False, ip.flags.df: True, ip.flags.mf: False, ip.frag_offset: 0, ip.ttl: 242, ip.proto: 6, ip.checksum: 0x61ff, ip.checksum.status: 2, ip.src: 56.127.178.8, ip.dst: 136.121.214.147, tcp.srcport: 25888, tcp.dstport: 9504, tcp.stream: 0, tcp.len: 1432, tcp.seq: 4297, tcp.nxtseq: 5729, tcp.ack: 1, tcp.hdr_len: 20, tcp.flags: 0x0010, tcp.flags.res: False, tcp.flags.cwr: False, tcp.flags.urg: False, tcp.flags.ack: True, tcp.flags.push: False, tcp.flags.reset: False, tcp.flags.syn: False, tcp.flags.fin: False, tcp.flags.str: \u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7A\u00b7\u00b7\u00b7\u00b7, tcp.window_size: 501, tcp.window_size_scalefactor: -1, tcp.checksum: 0xcf2a, tcp.checksum.status: 2, tcp.urgent_pointer: 0, tcp.time_relative: 0.000034000, tcp.time_delta: 0.000006000, tcp.analysis.bytes_in_flight: 5728, tcp.analysis.push_bytes_sent: 5728, tcp.payload: , data.len: 1432<pck>frame.encap_type: 1, frame.time: Jan  9, 2025 06:47:36.861731000 UTC, frame.offset_shift: 0.000000000, frame.time_epoch: 1736405256.861731000, frame.time_delta: 0.003739000, frame.time_relative: 0.003773000, frame.number: 5, frame.len: 1486, frame.marked: False, frame.protocols: eth:ethertype:ip:tcp:data, ip.version: 4, ip.hdr_len: 20, ip.dsfield: 0x40, ip.dsfield.dscp: 16, ip.dsfield.ecn: 0, ip.len: 1472, ip.id: 0xbf51, ip.flags: 0x02, ip.flags.rb: False, ip.flags.df: True, ip.flags.mf: False, ip.frag_offset: 0, ip.ttl: 242, ip.proto: 6, ip.checksum: 0x61fe, ip.checksum.status: 2, ip.src: 56.127.178.8, ip.dst: 136.121.214.147, tcp.srcport: 25888, tcp.dstport: 9504, tcp.stream: 0, tcp.len: 1432, tcp.seq: 5729, tcp.nxtseq: 7161, tcp.ack: 1, tcp.hdr_len: 20, tcp.flags: 0x0010, tcp.flags.res: False, tcp.flags.cwr: False, tcp.flags.urg: False, tcp.flags.ack: True, tcp.flags.push: False, tcp.flags.reset: False, tcp.flags.syn: False, tcp.flags.fin: False, tcp.flags.str: \u00b7\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7A\u00b7\u00b7\u00b7\u00b7, tcp.window_size: 501, tcp.window_size_scalefactor: -1, tcp.checksum: 0x7dfa, tcp.checksum.status: 2, tcp.urgent_pointer: 0, tcp.time_relative: 0.003773000, tcp.time_delta: 0.003739000, tcp.analysis.bytes_in_flight: 7160, tcp.analysis.push_bytes_sent: 7160, tcp.payload: , data.len: 1432", "output": "sendAudio"}
+no change     /home/changc/miniconda3/condabin/conda
+no change     /home/changc/miniconda3/bin/conda
+no change     /home/changc/miniconda3/bin/conda-env
+no change     /home/changc/miniconda3/bin/activate
+no change     /home/changc/miniconda3/bin/deactivate
+no change     /home/changc/miniconda3/etc/profile.d/conda.sh
+no change     /home/changc/miniconda3/etc/fish/conf.d/conda.fish
+no change     /home/changc/miniconda3/shell/condabin/Conda.psm1
+no change     /home/changc/miniconda3/shell/condabin/conda-hook.ps1
+no change     /home/changc/miniconda3/lib/python3.12/site-packages/xontrib/conda.xsh
+no change     /home/changc/miniconda3/etc/profile.d/conda.csh
+modified      /root/.bashrc
+
+==> For changes to take effect, close and re-open your current shell. <==
+
+/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/jieba/_compat.py:18: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/changc/miniconda3/envs/trafficllm-qwenvl/lib/python3.11/site-packages/accelerate/state.py:271: UserWarning: OMP_NUM_THREADS/MKL_NUM_THREADS unset, we set it at 24 to improve oob performance.
+  warnings.warn(
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+01/26/2026 15:22:29 - WARNING - __main__ - Process rank: 0, device: cpu:0, n_gpu: 1distributed training: True, 16-bits training: False
+01/26/2026 15:22:29 - INFO - __main__ - Training/evaluation parameters Seq2SeqTrainingArguments(
+_n_gpu=1,
+accelerator_config={'split_batches': False, 'dispatch_batches': None, 'even_batches': True, 'use_seedable_sampler': True, 'non_blocking': False, 'gradient_accumulation_kwargs': None, 'use_configured_state': False},
+adafactor=False,
+adam_beta1=0.9,
+adam_beta2=0.999,
+adam_epsilon=1e-08,
+auto_find_batch_size=False,
+average_tokens_across_devices=True,
+batch_eval_metrics=False,
+bf16=False,
+bf16_full_eval=False,
+data_seed=None,
+dataloader_drop_last=False,
+dataloader_num_workers=0,
+dataloader_persistent_workers=False,
+dataloader_pin_memory=True,
+dataloader_prefetch_factor=None,
+ddp_backend=None,
+ddp_broadcast_buffers=None,
+ddp_bucket_cap_mb=None,
+ddp_find_unused_parameters=None,
+ddp_timeout=1800,
+debug=[],
+deepspeed=None,
+disable_tqdm=False,
+do_eval=False,
+do_predict=True,
+do_train=True,
+eval_accumulation_steps=None,
+eval_delay=0,
+eval_do_concat_batches=True,
+eval_on_start=False,
+eval_steps=None,
+eval_strategy=IntervalStrategy.NO,
+eval_use_gather_object=False,
+fp16=False,
+fp16_backend=auto,
+fp16_full_eval=False,
+fp16_opt_level=O1,
+fsdp=[],
+fsdp_config={'min_num_params': 0, 'xla': False, 'xla_fsdp_v2': False, 'xla_fsdp_grad_ckpt': False},
+fsdp_min_num_params=0,
+fsdp_transformer_layer_cls_to_wrap=None,
+full_determinism=False,
+generation_config=None,
+generation_max_length=None,
+generation_num_beams=None,
+gradient_accumulation_steps=16,
+gradient_checkpointing=False,
+gradient_checkpointing_kwargs=None,
+greater_is_better=None,
+group_by_length=False,
+half_precision_backend=auto,
+hub_always_push=False,
+hub_model_id=None,
+hub_private_repo=None,
+hub_revision=None,
+hub_strategy=HubStrategy.EVERY_SAVE,
+hub_token=<HUB_TOKEN>,
+ignore_data_skip=False,
+include_for_metrics=[],
+include_inputs_for_metrics=False,
+include_num_input_tokens_seen=no,
+include_tokens_per_second=False,
+jit_mode_eval=False,
+label_names=None,
+label_smoothing_factor=0.0,
+learning_rate=0.1,
+length_column_name=length,
+liger_kernel_config=None,
+load_best_model_at_end=False,
+local_rank=0,
+log_level=passive,
+log_level_replica=warning,
+log_on_each_node=True,
+logging_dir=../models/Qwen3-VL-8B-Instruct-{LR}-proj/qq/500/runs/Jan26_15-22-29_sg-changc-260126-f5dbd-default0-0,
+logging_first_step=False,
+logging_nan_inf_filter=True,
+logging_steps=5,
+logging_strategy=IntervalStrategy.STEPS,
+lr_scheduler_kwargs=None,
+lr_scheduler_type=SchedulerType.LINEAR,
+max_grad_norm=1.0,
+max_steps=-1,
+metric_for_best_model=None,
+mp_parameters=,
+neftune_noise_alpha=None,
+no_cuda=False,
+num_train_epochs=10.0,
+optim=OptimizerNames.ADAMW_TORCH_FUSED,
+optim_args=None,
+optim_target_modules=None,
+output_dir=../models/Qwen3-VL-8B-Instruct-{LR}-proj/qq/500,
+overwrite_output_dir=True,
+parallelism_config=None,
+past_index=-1,
+per_device_eval_batch_size=1,
+per_device_train_batch_size=1,
+predict_with_generate=True,
+prediction_loss_only=False,
+project=huggingface,
+push_to_hub=False,
+push_to_hub_model_id=None,
+push_to_hub_organization=None,
+push_to_hub_token=<PUSH_TO_HUB_TOKEN>,
+ray_scope=last,
+remove_unused_columns=False,
+report_to=[],
+restore_callback_states_from_checkpoint=False,
+resume_from_checkpoint=None,
+run_name=None,
+save_on_each_node=False,
+save_only_model=False,
+save_safetensors=True,
+save_steps=100,
+save_strategy=SaveStrategy.STEPS,
+save_total_limit=None,
+seed=42,
+skip_memory_metrics=True,
+sortish_sampler=False,
+tf32=None,
+torch_compile=False,
+torch_compile_backend=None,
+torch_compile_mode=None,
+torch_empty_cache_steps=None,
+torchdynamo=None,
+tpu_metrics_debug=False,
+tpu_num_cores=None,
+trackio_space_id=trackio,
+use_cpu=False,
+use_legacy_prediction_loop=False,
+use_liger_kernel=False,
+use_mps_device=False,
+warmup_ratio=0.0,
+warmup_steps=0,
+weight_decay=0.0,
+)
+[INFO|tokenization_utils_base.py:2109] 2026-01-26 15:22:30,682 >> loading file vocab.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-26 15:22:30,682 >> loading file merges.txt
+[INFO|tokenization_utils_base.py:2109] 2026-01-26 15:22:30,682 >> loading file tokenizer.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-26 15:22:30,682 >> loading file added_tokens.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-26 15:22:30,682 >> loading file special_tokens_map.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-26 15:22:30,682 >> loading file tokenizer_config.json
+[INFO|tokenization_utils_base.py:2109] 2026-01-26 15:22:30,683 >> loading file chat_template.jinja
+[INFO|tokenization_utils_base.py:2380] 2026-01-26 15:22:31,017 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|configuration_utils.py:763] 2026-01-26 15:22:31,036 >> loading configuration file ../../Bishe/Qwen3-VL-8B-Instruct/config.json
+[INFO|configuration_utils.py:839] 2026-01-26 15:22:31,039 >> Model config Qwen3VLConfig {
+  "architectures": [
+    "Qwen3VLForConditionalGeneration"
+  ],
+  "image_token_id": 151655,
+  "model_type": "qwen3_vl",
+  "text_config": {
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 4096,
+    "initializer_range": 0.02,
+    "intermediate_size": 12288,
+    "max_position_embeddings": 262144,
+    "model_type": "qwen3_vl_text",
+    "num_attention_heads": 32,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 8,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "mrope_interleaved": true,
+      "mrope_section": [
+        24,
+        20,
+        20
+      ],
+      "rope_type": "default"
+    },
+    "rope_theta": 5000000,
+    "use_cache": true,
+    "vocab_size": 151936
+  },
+  "tie_word_embeddings": false,
+  "transformers_version": "4.57.6",
+  "video_token_id": 151656,
+  "vision_config": {
+    "deepstack_visual_indexes": [
+      8,
+      16,
+      24
+    ],
+    "depth": 27,
+    "hidden_act": "gelu_pytorch_tanh",
+    "hidden_size": 1152,
+    "in_channels": 3,
+    "initializer_range": 0.02,
+    "intermediate_size": 4304,
+    "model_type": "qwen3_vl",
+    "num_heads": 16,
+    "num_position_embeddings": 2304,
+    "out_hidden_size": 4096,
+    "patch_size": 16,
+    "spatial_merge_size": 2,
+    "temporal_patch_size": 2
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652
+}
+
+[INFO|modeling_utils.py:1169] 2026-01-26 15:22:31,039 >> loading weights file ../../Bishe/Qwen3-VL-8B-Instruct/model.safetensors.index.json
+[INFO|configuration_utils.py:986] 2026-01-26 15:22:31,041 >> Generate config GenerationConfig {}
+
+[INFO|modeling_utils.py:2341] 2026-01-26 15:22:31,042 >> Instantiating Qwen3VLVisionModel model under default dtype torch.float32.
+[INFO|modeling_utils.py:2341] 2026-01-26 15:22:31,102 >> Instantiating Qwen3VLTextModel model under default dtype torch.float32.
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Loading checkpoint shards:  25%|██▌       | 1/4 [00:06<00:20,  6.84s/it]
+Loading checkpoint shards:  50%|█████     | 2/4 [00:13<00:13,  6.84s/it]
+Loading checkpoint shards:  75%|███████▌  | 3/4 [00:20<00:06,  6.86s/it]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:24<00:00,  5.71s/it]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:24<00:00,  6.13s/it]
+[INFO|configuration_utils.py:939] 2026-01-26 15:22:55,686 >> loading configuration file ../../Bishe/Qwen3-VL-8B-Instruct/generation_config.json
+[INFO|configuration_utils.py:986] 2026-01-26 15:22:55,686 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "do_sample": true,
+  "eos_token_id": [
+    151645,
+    151643
+  ],
+  "pad_token_id": 151643,
+  "temperature": 0.7,
+  "top_k": 20,
+  "top_p": 0.8
+}
+
+[INFO|dynamic_module_utils.py:423] 2026-01-26 15:22:55,687 >> Could not locate the custom_generate/generate.py inside ../../Bishe/Qwen3-VL-8B-Instruct.
+trainable parameters: prompt_encoder.default.embedding.weight
+prompt_encoder.default.transform.0.weight
+prompt_encoder.default.transform.0.bias
+prompt_encoder.default.transform.2.weight
+prompt_encoder.default.transform.2.bias
+trainable params: 76,751,872 || all params: 8,843,875,568 || trainable%: 0.8679
+False
+PeftModelForCausalLM(
+  (base_model): Qwen3VLForConditionalGeneration(
+    (model): Qwen3VLModel(
+      (visual): Qwen3VLVisionModel(
+        (patch_embed): Qwen3VLVisionPatchEmbed(
+          (proj): Conv3d(3, 1152, kernel_size=(2, 16, 16), stride=(2, 16, 16))
+        )
+        (pos_embed): Embedding(2304, 1152)
+        (rotary_pos_emb): Qwen3VLVisionRotaryEmbedding()
+        (blocks): ModuleList(
+          (0-26): 27 x Qwen3VLVisionBlock(
+            (norm1): LayerNorm((1152,), eps=1e-06, elementwise_affine=True)
+            (norm2): LayerNorm((1152,), eps=1e-06, elementwise_affine=True)
+            (attn): Qwen3VLVisionAttention(
+              (qkv): Linear(in_features=1152, out_features=3456, bias=True)
+              (proj): Linear(in_features=1152, out_features=1152, bias=True)
+            )
+            (mlp): Qwen3VLVisionMLP(
+              (linear_fc1): Linear(in_features=1152, out_features=4304, bias=True)
+              (linear_fc2): Linear(in_features=4304, out_features=1152, bias=True)
+              (act_fn): GELUTanh()
+            )
+          )
+        )
+        (merger): Qwen3VLVisionPatchMerger(
+          (norm): LayerNorm((1152,), eps=1e-06, elementwise_affine=True)
+          (linear_fc1): Linear(in_features=4608, out_features=4608, bias=True)
+          (act_fn): GELU(approximate='none')
+          (linear_fc2): Linear(in_features=4608, out_features=4096, bias=True)
+        )
+        (deepstack_merger_list): ModuleList(
+          (0-2): 3 x Qwen3VLVisionPatchMerger(
+            (norm): LayerNorm((4608,), eps=1e-06, elementwise_affine=True)
+            (linear_fc1): Linear(in_features=4608, out_features=4608, bias=True)
+            (act_fn): GELU(approximate='none')
+            (linear_fc2): Linear(in_features=4608, out_features=4096, bias=True)
+          )
+        )
+      )
+      (language_model): Qwen3VLTextModel(
+        (embed_tokens): Embedding(151936, 4096)
+        (layers): ModuleList(
+          (0-35): 36 x Qwen3VLTextDecoderLayer(
+            (self_attn): Qwen3VLTextAttention(
+              (q_proj): Linear(in_features=4096, out_features=4096, bias=False)
+              (k_proj): Linear(in_features=4096, out_features=1024, bias=False)
+              (v_proj): Linear(in_features=4096, out_features=1024, bias=False)
+              (o_proj): Linear(in_features=4096, out_features=4096, bias=False)
+              (q_norm): Qwen3VLTextRMSNorm((128,), eps=1e-06)
+              (k_norm): Qwen3VLTextRMSNorm((128,), eps=1e-06)
+            )
+            (mlp): Qwen3VLTextMLP(
+              (gate_proj): Linear(in_features=4096, out_features=12288, bias=False)
+              (up_proj): Linear(in_features=4096, out_features=12288, bias=False)
+              (down_proj): Linear(in_features=12288, out_features=4096, bias=False)
+              (act_fn): SiLUActivation()
+            )
+            (input_layernorm): Qwen3VLTextRMSNorm((4096,), eps=1e-06)
+            (post_attention_layernorm): Qwen3VLTextRMSNorm((4096,), eps=1e-06)
+          )
+        )
+        (norm): Qwen3VLTextRMSNorm((4096,), eps=1e-06)
+        (rotary_emb): Qwen3VLTextRotaryEmbedding()
+      )
+    )
+    (lm_head): Linear(in_features=4096, out_features=151936, bias=False)
+  )
+  (prompt_encoder): ModuleDict(
+    (default): PrefixEncoder(
+      (embedding): Embedding(128, 1024)
+      (transform): Sequential(
+        (0): Linear(in_features=1024, out_features=1024, bias=True)
+        (1): Tanh()
+        (2): Linear(in_features=1024, out_features=73728, bias=True)
+      )
+    )
+  )
+  (word_embeddings): Embedding(151936, 4096)
+)
