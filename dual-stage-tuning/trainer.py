@@ -37,50 +37,47 @@ class PrefixTrainer(Trainer):
     # def training_step(self, model, inputs, num_items_in_batch=None):
     #     loss = super().training_step(model, inputs, num_items_in_batch=num_items_in_batch)
 
-    #     logging_steps = getattr(self.args, "logging_steps", 0) or 0
-    #     if logging_steps > 0 and self.is_world_process_zero() and (self.state.global_step % logging_steps == 0):
-    #         try:
-    #             lr = None
-    #             if getattr(self, "optimizer", None) is not None and len(self.optimizer.param_groups) > 0:
-    #                 lr = self.optimizer.param_groups[0].get("lr", None)
+    #     logging_steps = int(getattr(self.args, "logging_steps", 0) or 0)
+    #     if logging_steps <= 0:
+    #         return loss
 
-    #             total_param_sq = 0.0
-    #             total_grad_sq = 0.0
-    #             prefix_param_sq = 0.0
-    #             prefix_grad_sq = 0.0
+    #     if not self.is_world_process_zero():
+    #         return loss
+
+    #     if self.state.global_step == 0 or (self.state.global_step % logging_steps) != 0:
+    #         return loss
+
+    #     try:
+    #         total_grad_sq = 0.0
+    #         prefix_grad_sq = 0.0
+    #         total_param_sq = 0.0
+    #         prefix_param_sq = 0.0
+
+    #         for name, p in model.named_parameters():
+    #             if not getattr(p, "requires_grad", False):
+    #                 continue
 
     #             with torch.no_grad():
-    #                 for name, p in model.named_parameters():
-    #                     if not p.requires_grad:
-    #                         continue
-    #                     param_sq = float(p.detach().float().pow(2).sum().item())
-    #                     total_param_sq += param_sq
+    #                 total_param_sq += float(p.detach().float().pow(2).sum().item())
+    #                 if "prompt_encoder" in name:
+    #                     prefix_param_sq += float(p.detach().float().pow(2).sum().item())
+
+    #                 if p.grad is not None:
+    #                     g = p.grad.detach().float()
+    #                     total_grad_sq += float(g.pow(2).sum().item())
     #                     if "prompt_encoder" in name:
-    #                         prefix_param_sq += param_sq
+    #                         prefix_grad_sq += float(g.pow(2).sum().item())
 
-    #                     if p.grad is not None:
-    #                         grad_sq = float(p.grad.detach().float().pow(2).sum().item())
-    #                         total_grad_sq += grad_sq
-    #                         if "prompt_encoder" in name:
-    #                             prefix_grad_sq += grad_sq
+    #         metrics = {
+    #             "grad_norm": math.sqrt(total_grad_sq) if total_grad_sq > 0.0 else 0.0,
+    #             "param_norm": math.sqrt(total_param_sq) if total_param_sq > 0.0 else 0.0,
+    #             "prefix_grad_norm": math.sqrt(prefix_grad_sq) if prefix_grad_sq > 0.0 else 0.0,
+    #             "prefix_param_norm": math.sqrt(prefix_param_sq) if prefix_param_sq > 0.0 else 0.0,
+    #         }
 
-    #             total_param_norm = math.sqrt(total_param_sq)
-    #             total_grad_norm = math.sqrt(total_grad_sq)
-    #             prefix_param_norm = math.sqrt(prefix_param_sq)
-    #             prefix_grad_norm = math.sqrt(prefix_grad_sq)
-
-    #             if lr is None:
-    #                 logger.warning(
-    #                     f"step={self.state.global_step} param_norm={total_param_norm:.6f} grad_norm={total_grad_norm:.6f} "
-    #                     f"prefix_param_norm={prefix_param_norm:.6f} prefix_grad_norm={prefix_grad_norm:.6f}"
-    #                 )
-    #             else:
-    #                 logger.warning(
-    #                     f"step={self.state.global_step} lr={lr:.8g} param_norm={total_param_norm:.6f} grad_norm={total_grad_norm:.6f} "
-    #                     f"prefix_param_norm={prefix_param_norm:.6f} prefix_grad_norm={prefix_grad_norm:.6f}"
-    #                 )
-    #         except Exception as e:
-    #             logger.warning(f"Failed to compute norm stats: {e}")
+    #         self.log(metrics)
+    #     except Exception as e:
+    #         logger.warning(f"Failed to compute grad/param norm stats: {e}")
 
     #     return loss
 

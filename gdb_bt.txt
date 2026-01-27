@@ -1,0 +1,480 @@
+  Id   Target Id                          Frame 
+* 1    Thread 0x7c94f0f97440 (LWP 267159) __pthread_kill_implementation (no_tid=0, signo=11, threadid=136979139884096) at ./nptl/pthread_kill.c:44
+  2    Thread 0x7c90bc9fe640 (LWP 267319) __futex_abstimed_wait_common64 (private=<optimized out>, cancel=true, abstime=0x7c90bc9fd980, op=393, expected=0, futex_word=0x7c9088000ba0) at ./nptl/futex-internal.c:57
+  3    Thread 0x7c90bffff640 (LWP 267308) __futex_abstimed_wait_common64 (private=0, cancel=true, abstime=0x7c90bfffedd0, op=393, expected=0, futex_word=0x1d2a7ca0) at ./nptl/futex-internal.c:57
+  4    Thread 0x7c90bd1ff640 (LWP 267335) __futex_abstimed_wait_common64 (private=<optimized out>, cancel=true, abstime=0x7c90bd1fe980, op=393, expected=0, futex_word=0x7c9090001000) at ./nptl/futex-internal.c:57
+  5    Thread 0x7c92cc3ff640 (LWP 267263) 0x00007c94f0d18c3f in __GI___poll (fds=0x1d17bfb0, nfds=3, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+  6    Thread 0x7c90bf7fe640 (LWP 267309) 0x00007c94f0d18c3f in __GI___poll (fds=0x7c90b8000c20, nfds=10, timeout=4) at ../sysdeps/unix/sysv/linux/poll.c:29
+  7    Thread 0x7c9497dff640 (LWP 267190) __futex_abstimed_wait_common64 (private=0, cancel=true, abstime=0x0, op=393, expected=0, futex_word=0x7c9498416630) at ./nptl/futex-internal.c:57
+  8    Thread 0x7c90951ff640 (LWP 267342) __futex_abstimed_wait_common64 (private=0, cancel=true, abstime=0x7c90951fedd0, op=393, expected=0, futex_word=0x1d2eeef0) at ./nptl/futex-internal.c:57
+  9    Thread 0x7c90949fe640 (LWP 267343) 0x00007c94f0d18c3f in __GI___poll (fds=0x7c8ea0000c20, nfds=10, timeout=100) at ../sysdeps/unix/sysv/linux/poll.c:29
+
+Thread 9 (Thread 0x7c90949fe640 (LWP 267343)):
+#0  0x00007c94f0d18c3f in __GI___poll (fds=0x7c8ea0000c20, nfds=10, timeout=100) at ../sysdeps/unix/sysv/linux/poll.c:29
+#1  0x00007c944fb19987 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#2  0x00007c944fc063c7 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#3  0x00007c944fb06803 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#4  0x00007c94f0c94ac3 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:442
+#5  0x00007c94f0d268c0 in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:81
+
+Thread 8 (Thread 0x7c90951ff640 (LWP 267342)):
+#0  __futex_abstimed_wait_common64 (private=0, cancel=true, abstime=0x7c90951fedd0, op=393, expected=0, futex_word=0x1d2eeef0) at ./nptl/futex-internal.c:57
+#1  __futex_abstimed_wait_common (cancel=true, private=0, abstime=0x7c90951fedd0, clockid=0, expected=0, futex_word=0x1d2eeef0) at ./nptl/futex-internal.c:87
+#2  __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x1d2eeef0, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x7c90951fedd0, private=private@entry=0) at ./nptl/futex-internal.c:139
+#3  0x00007c94f0c93e9b in __pthread_cond_wait_common (abstime=0x7c90951fedd0, clockid=0, mutex=0x1d2ae760, cond=0x1d2eeec8) at ./nptl/pthread_cond_wait.c:503
+#4  ___pthread_cond_timedwait64 (cond=0x1d2eeec8, mutex=0x1d2ae760, abstime=0x7c90951fedd0) at ./nptl/pthread_cond_wait.c:652
+#5  0x00007c944fa69d0a in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#6  0x00007c944fb06803 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#7  0x00007c94f0c94ac3 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:442
+#8  0x00007c94f0d268c0 in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:81
+
+Thread 7 (Thread 0x7c9497dff640 (LWP 267190)):
+#0  __futex_abstimed_wait_common64 (private=0, cancel=true, abstime=0x0, op=393, expected=0, futex_word=0x7c9498416630) at ./nptl/futex-internal.c:57
+#1  __futex_abstimed_wait_common (cancel=true, private=0, abstime=0x0, clockid=0, expected=0, futex_word=0x7c9498416630) at ./nptl/futex-internal.c:87
+#2  __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x7c9498416630, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0) at ./nptl/futex-internal.c:139
+#3  0x00007c94f0c93a41 in __pthread_cond_wait_common (abstime=0x0, clockid=0, mutex=0x7c9498416678, cond=0x7c9498416608) at ./nptl/pthread_cond_wait.c:503
+#4  ___pthread_cond_wait (cond=0x7c9498416608, mutex=0x7c9498416678) at ./nptl/pthread_cond_wait.c:627
+#5  0x00007c9499c95662 in background_thread_entry () from /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/libarrow.so.2300
+#6  0x00007c94f0c94ac3 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:442
+#7  0x00007c94f0d268c0 in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:81
+
+Thread 6 (Thread 0x7c90bf7fe640 (LWP 267309)):
+#0  0x00007c94f0d18c3f in __GI___poll (fds=0x7c90b8000c20, nfds=10, timeout=4) at ../sysdeps/unix/sysv/linux/poll.c:29
+#1  0x00007c944fb19987 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#2  0x00007c944fc063c7 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#3  0x00007c944fb06803 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#4  0x00007c94f0c94ac3 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:442
+#5  0x00007c94f0d268c0 in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:81
+
+Thread 5 (Thread 0x7c92cc3ff640 (LWP 267263)):
+#0  0x00007c94f0d18c3f in __GI___poll (fds=0x1d17bfb0, nfds=3, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+#1  0x00007c944fb19987 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#2  0x00007c944fc063c7 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#3  0x00007c944fb06803 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#4  0x00007c94f0c94ac3 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:442
+#5  0x00007c94f0d268c0 in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:81
+
+Thread 4 (Thread 0x7c90bd1ff640 (LWP 267335)):
+#0  __futex_abstimed_wait_common64 (private=<optimized out>, cancel=true, abstime=0x7c90bd1fe980, op=393, expected=0, futex_word=0x7c9090001000) at ./nptl/futex-internal.c:57
+#1  __futex_abstimed_wait_common (cancel=true, private=<optimized out>, abstime=0x7c90bd1fe980, clockid=0, expected=0, futex_word=0x7c9090001000) at ./nptl/futex-internal.c:87
+#2  __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x7c9090001000, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x7c90bd1fe980, private=<optimized out>) at ./nptl/futex-internal.c:139
+#3  0x00007c94f0c9c9b0 in do_futex_wait (sem=sem@entry=0x7c9090001000, abstime=abstime@entry=0x7c90bd1fe980, clockid=0) at ./nptl/sem_waitcommon.c:111
+#4  0x00007c94f0c9ca53 in __new_sem_wait_slow64 (sem=sem@entry=0x7c9090001000, abstime=abstime@entry=0x7c90bd1fe980, clockid=0) at ./nptl/sem_waitcommon.c:183
+#5  0x00007c94f0c9cb0a in ___sem_timedwait64 (abstime=0x7c90bd1fe980, sem=0x7c9090001000) at ./nptl/sem_timedwait.c:40
+#6  0x00000000004ebb8e in PyThread_acquire_lock_timed (lock=0x7c9090001000, microseconds=<optimized out>, intr_flag=1) at /usr/local/src/conda/python-3.11.14/Python/thread_pthread.h:490
+#7  0x00000000005e3d31 in acquire_timed (lock=0x7c9090001000, timeout=<optimized out>) at /usr/local/src/conda/python-3.11.14/Modules/_threadmodule.c:98
+#8  0x00000000005e381b in lock_PyThread_acquire_lock (self=0x7c90bdd62740, args=<optimized out>, kwds=<optimized out>) at /usr/local/src/conda/python-3.11.14/Modules/_threadmodule.c:179
+#9  0x0000000000531f80 in method_vectorcall_VARARGS_KEYWORDS (func=<optimized out>, args=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Objects/descrobject.c:364
+#10 0x000000000051e5f1 in _PyObject_VectorcallTstate (kwnames=<optimized out>, nargsf=<optimized out>, args=<optimized out>, callable=0x7c94f0f1ef20, tstate=0x1fb5d700) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_call.h:92
+#11 PyObject_Vectorcall (callable=0x7c94f0f1ef20, args=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Objects/call.c:299
+#12 0x0000000000511616 in _PyEval_EvalFrameDefault (tstate=<optimized out>, frame=<optimized out>, throwflag=<optimized out>) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:4769
+#13 0x000000000055822f in _PyEval_EvalFrame (throwflag=0, frame=0x7c94ed43e020, tstate=0x1fb5d700) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_ceval.h:73
+#14 _PyEval_Vector (kwnames=<optimized out>, argcount=<optimized out>, args=<optimized out>, locals=0x0, func=0x7c94f0196340, tstate=0x1fb5d700) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:6434
+#15 _PyFunction_Vectorcall (kwnames=<optimized out>, nargsf=<optimized out>, stack=<optimized out>, func=0x7c94f0196340) at /usr/local/src/conda/python-3.11.14/Objects/call.c:393
+#16 _PyObject_VectorcallTstate (tstate=0x1fb5d700, callable=0x7c94f0196340, args=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_call.h:92
+#17 0x0000000000557a70 in method_vectorcall (method=<optimized out>, args=0x88f190 <_PyRuntime+58928>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Objects/classobject.c:67
+#18 0x000000000062ab33 in thread_run (boot_raw=0x1ed9f420) at /usr/local/src/conda/python-3.11.14/Modules/_threadmodule.c:1124
+#19 0x00000000005fa114 in pythread_wrapper (arg=<optimized out>) at /usr/local/src/conda/python-3.11.14/Python/thread_pthread.h:241
+#20 0x00007c94f0c94ac3 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:442
+#21 0x00007c94f0d268c0 in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:81
+
+Thread 3 (Thread 0x7c90bffff640 (LWP 267308)):
+#0  __futex_abstimed_wait_common64 (private=0, cancel=true, abstime=0x7c90bfffedd0, op=393, expected=0, futex_word=0x1d2a7ca0) at ./nptl/futex-internal.c:57
+#1  __futex_abstimed_wait_common (cancel=true, private=0, abstime=0x7c90bfffedd0, clockid=0, expected=0, futex_word=0x1d2a7ca0) at ./nptl/futex-internal.c:87
+#2  __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x1d2a7ca0, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x7c90bfffedd0, private=private@entry=0) at ./nptl/futex-internal.c:139
+#3  0x00007c94f0c93e9b in __pthread_cond_wait_common (abstime=0x7c90bfffedd0, clockid=0, mutex=0x1d2ba390, cond=0x1d2a7c78) at ./nptl/pthread_cond_wait.c:503
+#4  ___pthread_cond_timedwait64 (cond=0x1d2a7c78, mutex=0x1d2ba390, abstime=0x7c90bfffedd0) at ./nptl/pthread_cond_wait.c:652
+#5  0x00007c944fa69d0a in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#6  0x00007c944fb06803 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+#7  0x00007c94f0c94ac3 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:442
+#8  0x00007c94f0d268c0 in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:81
+
+Thread 2 (Thread 0x7c90bc9fe640 (LWP 267319)):
+#0  __futex_abstimed_wait_common64 (private=<optimized out>, cancel=true, abstime=0x7c90bc9fd980, op=393, expected=0, futex_word=0x7c9088000ba0) at ./nptl/futex-internal.c:57
+#1  __futex_abstimed_wait_common (cancel=true, private=<optimized out>, abstime=0x7c90bc9fd980, clockid=0, expected=0, futex_word=0x7c9088000ba0) at ./nptl/futex-internal.c:87
+#2  __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x7c9088000ba0, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x7c90bc9fd980, private=<optimized out>) at ./nptl/futex-internal.c:139
+#3  0x00007c94f0c9c9b0 in do_futex_wait (sem=sem@entry=0x7c9088000ba0, abstime=abstime@entry=0x7c90bc9fd980, clockid=0) at ./nptl/sem_waitcommon.c:111
+#4  0x00007c94f0c9ca53 in __new_sem_wait_slow64 (sem=sem@entry=0x7c9088000ba0, abstime=abstime@entry=0x7c90bc9fd980, clockid=0) at ./nptl/sem_waitcommon.c:183
+#5  0x00007c94f0c9cb0a in ___sem_timedwait64 (abstime=0x7c90bc9fd980, sem=0x7c9088000ba0) at ./nptl/sem_timedwait.c:40
+#6  0x00000000004ebb8e in PyThread_acquire_lock_timed (lock=0x7c9088000ba0, microseconds=<optimized out>, intr_flag=1) at /usr/local/src/conda/python-3.11.14/Python/thread_pthread.h:490
+#7  0x00000000005e3d31 in acquire_timed (lock=0x7c9088000ba0, timeout=<optimized out>) at /usr/local/src/conda/python-3.11.14/Modules/_threadmodule.c:98
+#8  0x00000000005e381b in lock_PyThread_acquire_lock (self=0x7c92cc4940c0, args=<optimized out>, kwds=<optimized out>) at /usr/local/src/conda/python-3.11.14/Modules/_threadmodule.c:179
+#9  0x0000000000531f80 in method_vectorcall_VARARGS_KEYWORDS (func=<optimized out>, args=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Objects/descrobject.c:364
+#10 0x000000000051e5f1 in _PyObject_VectorcallTstate (kwnames=<optimized out>, nargsf=<optimized out>, args=<optimized out>, callable=0x7c94f0f1ef20, tstate=0x1ed88a60) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_call.h:92
+#11 PyObject_Vectorcall (callable=0x7c94f0f1ef20, args=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Objects/call.c:299
+#12 0x0000000000511616 in _PyEval_EvalFrameDefault (tstate=<optimized out>, frame=<optimized out>, throwflag=<optimized out>) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:4769
+#13 0x000000000055822f in _PyEval_EvalFrame (throwflag=0, frame=0x7c94958cf020, tstate=0x1ed88a60) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_ceval.h:73
+#14 _PyEval_Vector (kwnames=<optimized out>, argcount=<optimized out>, args=<optimized out>, locals=0x0, func=0x7c94f0196340, tstate=0x1ed88a60) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:6434
+#15 _PyFunction_Vectorcall (kwnames=<optimized out>, nargsf=<optimized out>, stack=<optimized out>, func=0x7c94f0196340) at /usr/local/src/conda/python-3.11.14/Objects/call.c:393
+#16 _PyObject_VectorcallTstate (tstate=0x1ed88a60, callable=0x7c94f0196340, args=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_call.h:92
+#17 0x0000000000557a70 in method_vectorcall (method=<optimized out>, args=0x88f190 <_PyRuntime+58928>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Objects/classobject.c:67
+#18 0x000000000062ab33 in thread_run (boot_raw=0x1ed71990) at /usr/local/src/conda/python-3.11.14/Modules/_threadmodule.c:1124
+#19 0x00000000005fa114 in pythread_wrapper (arg=<optimized out>) at /usr/local/src/conda/python-3.11.14/Python/thread_pthread.h:241
+#20 0x00007c94f0c94ac3 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:442
+#21 0x00007c94f0d268c0 in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:81
+
+Thread 1 (Thread 0x7c94f0f97440 (LWP 267159)):
+#0  __pthread_kill_implementation (no_tid=0, signo=11, threadid=136979139884096) at ./nptl/pthread_kill.c:44
+#1  __pthread_kill_internal (signo=11, threadid=136979139884096) at ./nptl/pthread_kill.c:78
+#2  __GI___pthread_kill (threadid=136979139884096, signo=signo@entry=11) at ./nptl/pthread_kill.c:89
+#3  0x00007c94f0c42476 in __GI_raise (sig=11) at ../sysdeps/posix/raise.c:26
+#4  <signal handler called>
+#5  0x00000000004f9958 in subtract_refs (containers=<optimized out>) at /usr/local/src/conda/python-3.11.14/Modules/gcmodule.c:478
+#6  deduce_unreachable (base=base@entry=0x88f438 <_PyRuntime+59608>, unreachable=unreachable@entry=0x7ffff46b0280) at /usr/local/src/conda/python-3.11.14/Modules/gcmodule.c:1100
+#7  0x00000000004f84a9 in gc_collect_main (tstate=0x8a9518 <_PyRuntime+166328>, generation=0, n_collected=0x7ffff46b0360, n_uncollectable=0x7ffff46b0358, nofail=0) at /usr/local/src/conda/python-3.11.14/Modules/gcmodule.c:1226
+#8  0x00000000005c74fc in gc_collect_with_callback (tstate=0x8a9518 <_PyRuntime+166328>, generation=0) at /usr/local/src/conda/python-3.11.14/Modules/gcmodule.c:1400
+#9  0x00000000004ec2ef in _PyObject_GC_Link (op=0x7c90bddac2c0) at /usr/local/src/conda/python-3.11.14/Modules/gcmodule.c:2270
+#10 gc_alloc (presize=<optimized out>, basicsize=<optimized out>) at /usr/local/src/conda/python-3.11.14/Modules/gcmodule.c:2290
+#11 _PyObject_GC_New (tp=0x86f4a0 <PyDict_Type>) at /usr/local/src/conda/python-3.11.14/Modules/gcmodule.c:2298
+#12 0x00000000005189ba in new_dict (free_values_on_failure=0, used=0, values=0x0, keys=0x86f640 <empty_keys_struct>) at /usr/local/src/conda/python-3.11.14/Objects/dictobject.c:740
+#13 PyDict_New () at /usr/local/src/conda/python-3.11.14/Objects/dictobject.c:844
+#14 dict_new_presized (unicode=<optimized out>, minused=0) at /usr/local/src/conda/python-3.11.14/Objects/dictobject.c:1578
+#15 _PyDict_FromItems (length=0, values_offset=2, values=<optimized out>, keys_offset=2, keys=0x7c94f1095180) at /usr/local/src/conda/python-3.11.14/Objects/dictobject.c:1619
+#16 _PyEval_EvalFrameDefault (tstate=<optimized out>, frame=<optimized out>, throwflag=<optimized out>) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:3317
+#17 0x0000000000538d03 in _PyEval_EvalFrame (throwflag=0, frame=0x7c94f1095100, tstate=0x8a9518 <_PyRuntime+166328>) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_ceval.h:73
+#18 _PyEval_Vector (kwnames=<optimized out>, argcount=2, args=0x7ffff46b05e0, locals=0x0, func=<optimized out>, tstate=0x8a9518 <_PyRuntime+166328>) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:6434
+#19 _PyFunction_Vectorcall (func=<optimized out>, stack=0x7ffff46b05e0, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Objects/call.c:393
+#20 0x00000000004ffa15 in _PyObject_VectorcallTstate (tstate=0x8a9518 <_PyRuntime+166328>, callable=0x7c90bdc8bf60, args=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_call.h:92
+#21 0x000000000060fb01 in partial_vectorcall (pto=0x7c9427dac900, args=0x7c90bdc77358, nargsf=<optimized out>, kwnames=0x0) at /usr/local/src/conda/python-3.11.14/Modules/_functoolsmodule.c:260
+#22 0x00000000005157bb in do_call_core (use_tracing=<optimized out>, kwdict=0x7c92c8111980, callargs=0x7c90bdc77340, func=0x7c9427dac900, tstate=<optimized out>) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:7349
+#23 _PyEval_EvalFrameDefault (tstate=<optimized out>, frame=<optimized out>, throwflag=<optimized out>) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:5376
+#24 0x0000000000557928 in _PyEval_EvalFrame (throwflag=0, frame=0x7c94f1095018, tstate=0x8a9518 <_PyRuntime+166328>) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_ceval.h:73
+#25 _PyEval_Vector (kwnames=<optimized out>, argcount=<optimized out>, args=0x7ffff46b0800, locals=0x0, func=0x7c93f5553420, tstate=0x8a9518 <_PyRuntime+166328>) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:6434
+#26 _PyFunction_Vectorcall (kwnames=<optimized out>, nargsf=<optimized out>, stack=0x7ffff46b0800, func=0x7c93f5553420) at /usr/local/src/conda/python-3.11.14/Objects/call.c:393
+#27 _PyObject_VectorcallTstate (kwnames=<optimized out>, nargsf=<optimized out>, args=<optimized out>, callable=0x7c93f5553420, tstate=0x8a9518 <_PyRuntime+166328>) at /usr/local/src/conda/python-3.11.14/Include/internal/pycore_call.h:92
+#28 method_vectorcall (method=<optimized out>, args=<optimized out>, nargsf=<optimized out>, kwnames=<optimized out>) at /usr/local/src/conda/python-3.11.14/Objects/classobject.c:89
+#29 0x00000000005157bb in do_call_core (use_tracing=<optimized out>, kwdict=0x7c92c8145f00, callargs=0x7c90bdc775b0, func=0x7c92d8f0fc00, tstate=<optimized out>) at /usr/local/src/conda/python-3.11.14/Python/ceval.c:7349
+(More stack frames follow...)
+From                To                  Syms Read   Shared Object Library
+0x00007c94f108a040  0x00007c94f108a105  Yes         /lib/x86_64-linux-gnu/libpthread.so.0
+0x00007c94f1085040  0x00007c94f1085105  Yes         /lib/x86_64-linux-gnu/libdl.so.2
+0x00007c94f1080040  0x00007c94f1080105  Yes         /lib/x86_64-linux-gnu/libutil.so.1
+0x00007c94f0fa63a0  0x00007c94f10218c8  Yes         /lib/x86_64-linux-gnu/libm.so.6
+0x00007c94f0c28700  0x00007c94f0dba9bd  Yes         /lib/x86_64-linux-gnu/libc.so.6
+0x00007c94f10a3090  0x00007c94f10cc315  Yes         /lib64/ld-linux-x86-64.so.2
+0x00007c94f0af6050  0x00007c94f0afbdc1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_json.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef62d600  0x00007c94efdb0f28  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/_core/_multiarray_umath.cpython-311-x86_64-linux-gnu.so
+0x00007c94eded7c00  0x00007c94ef1cd0ec  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/_core/../../numpy.libs/libscipy_openblas64_-fdde5778.so
+0x00007c94edcc6f30  0x00007c94edd60954  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/bin/../lib/libstdc++.so.6
+0x00007c94f0aa46e0  0x00007c94f0ab926c  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/bin/../lib/libgcc_s.so.1
+0x00007c94ed61b870  0x00007c94ed846837  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/_core/../../numpy.libs/libgfortran-040039e1-0352e75f.so.5.0.0
+0x00007c94ed2023e0  0x00007c94ed225d2b  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/_core/../../numpy.libs/libquadmath-96973f99-934c22de.so.0.0.0
+0x00007c94f0a89050  0x00007c94f0a96c51  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/bin/../lib/libz.so.1
+0x00007c94efff1050  0x00007c94efff8781  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/math.cpython-311-x86_64-linux-gnu.so
+0x00007c94effd3050  0x00007c94effe3a71  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_datetime.cpython-311-x86_64-linux-gnu.so
+0x00007c94f1090050  0x00007c94f1090211  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_contextvars.cpython-311-x86_64-linux-gnu.so
+0x00007c94f0e2e050  0x00007c94f0e2e3c1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_opcode.cpython-311-x86_64-linux-gnu.so
+0x00007c94f0a7b050  0x00007c94f0a7f8b1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_struct.cpython-311-x86_64-linux-gnu.so
+0x00007c94effb3050  0x00007c94effc5181  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_pickle.cpython-311-x86_64-linux-gnu.so
+0x00007c94eff95050  0x00007c94effa2ae1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_ctypes.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef5f3000  0x00007c94ef5fb791  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/../../libffi.so.8
+0x00007c94eff8a050  0x00007c94eff8a1c1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_typing.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef5c1a00  0x00007c94ef5e49c0  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/linalg/_umath_linalg.cpython-311-x86_64-linux-gnu.so
+0x00007c94f0aeb050  0x00007c94f0aeda11  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_heapq.cpython-311-x86_64-linux-gnu.so
+0x00007c94f0ad7050  0x00007c94f0adf2b1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_socket.cpython-311-x86_64-linux-gnu.so
+0x00007c94f0acb050  0x00007c94f0acd241  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/select.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef549050  0x00007c94ef54fef1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/array.cpython-311-x86_64-linux-gnu.so
+0x00007c94f0ac2050  0x00007c94f0ac3081  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/fcntl.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef540050  0x00007c94ef541f21  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_posixsubprocess.cpython-311-x86_64-linux-gnu.so
+0x00007c94edaea050  0x00007c94edaf3781  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_ssl.cpython-311-x86_64-linux-gnu.so
+0x00007c94ed47c050  0x00007c94ed4d28e1  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/../../libssl.so.3
+0x00007c949d8b9000  0x00007c949db14e81  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/../../libcrypto.so.3
+0x00007c94ef536050  0x00007c94ef5395e1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/binascii.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef528050  0x00007c94ef52c3f1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_asyncio.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef51e050  0x00007c94ef51f011  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_bisect.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef517050  0x00007c94ef518ae1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_random.cpython-311-x86_64-linux-gnu.so
+0x00007c94edace050  0x00007c94edad2c81  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_sha512.cpython-311-x86_64-linux-gnu.so
+0x00007c94edac3050  0x00007c94edac6391  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/zlib.cpython-311-x86_64-linux-gnu.so
+0x00007c94edaba050  0x00007c94edabbe21  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_bz2.cpython-311-x86_64-linux-gnu.so
+0x00007c94ed449050  0x00007c94ed456431  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/../../libbz2.so.1.0
+0x00007c949fed9050  0x00007c949fedce61  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_lzma.cpython-311-x86_64-linux-gnu.so
+0x00007c949feaa050  0x00007c949fec7031  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/../../liblzma.so.5
+0x00007c94edab4050  0x00007c94edab4a51  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_queue.cpython-311-x86_64-linux-gnu.so
+0x00007c949fe9a050  0x00007c949fe9f191  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_hashlib.cpython-311-x86_64-linux-gnu.so
+0x00007c949fe8a050  0x00007c949fe914e1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_blake2.cpython-311-x86_64-linux-gnu.so
+0x00007c949fe7e050  0x00007c949fe824d1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_csv.cpython-311-x86_64-linux-gnu.so
+0x00007c949d040600  0x00007c949d2812ce  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/lib.cpython-311-x86_64-linux-gnu.so
+0x00007c949ceafcc0  0x00007c949cfae669  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/libarrow_python.so.2300
+0x00007c949ca4b500  0x00007c949cd2e714  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/libarrow_substrait.so.2300
+0x00007c949d3e33c0  0x00007c949d4b5427  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/libarrow_dataset.so.2300
+0x00007c949c1b7d80  0x00007c949c729282  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/libparquet.so.2300
+0x00007c949bee7100  0x00007c949bfc3638  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/libarrow_acero.so.2300
+0x00007c949b0af140  0x00007c949bbbafe5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/libarrow_compute.so.2300
+0x00007c94988b92c0  0x00007c949a523460  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/libarrow.so.2300
+0x00007c94ed443080  0x00007c94ed443275  Yes         /lib/x86_64-linux-gnu/librt.so.1
+0x00007c949fe34050  0x00007c949fe66381  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_decimal.cpython-311-x86_64-linux-gnu.so
+0x00007c949fe29050  0x00007c949fe29231  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_uuid.cpython-311-x86_64-linux-gnu.so
+0x00007c949fe21050  0x00007c949fe245c1  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/../../libuuid.so.1
+0x00007c949dcb7840  0x00007c949dcf436f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/random/_bounded_integers.cpython-311-x86_64-linux-gnu.so
+0x00007c949dc88940  0x00007c949dca5a20  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/random/bit_generator.cpython-311-x86_64-linux-gnu.so
+0x00007c949ce32880  0x00007c949ce63358  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/random/_common.cpython-311-x86_64-linux-gnu.so
+0x00007c949be05d80  0x00007c949be79727  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/random/_generator.cpython-311-x86_64-linux-gnu.so
+0x00007c949fe04780  0x00007c949fe1584b  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/random/_pcg64.cpython-311-x86_64-linux-gnu.so
+0x00007c949dc697c0  0x00007c949dc7942c  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/random/_mt19937.cpython-311-x86_64-linux-gnu.so
+0x00007c949d38d7a0  0x00007c949d39acb5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/random/_philox.cpython-311-x86_64-linux-gnu.so
+0x00007c949dc566c0  0x00007c949dc5eab1  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/random/_sfc64.cpython-311-x86_64-linux-gnu.so
+0x00007c94971319c0  0x00007c94971813c7  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/random/mtrand.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef5b3280  0x00007c94ef5b8bfc  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/pandas_parser.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef5a8240  0x00007c94ef5ad6eb  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/pandas_datetime.cpython-311-x86_64-linux-gnu.so
+0x00007c9496ef5ac0  0x00007c9497014d7f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/interval.cpython-311-x86_64-linux-gnu.so
+0x00007c9496c15b40  0x00007c9496ddf0e1  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/hashtable.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef57b940  0x00007c94ef59ac67  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/missing.cpython-311-x86_64-linux-gnu.so
+0x00007c949ce078a0  0x00007c949ce22509  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/dtypes.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef562560  0x00007c94ef56fc6d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/ccalendar.cpython-311-x86_64-linux-gnu.so
+0x00007c949c9e1700  0x00007c949c9f7cdb  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/np_datetime.cpython-311-x86_64-linux-gnu.so
+0x00007c9496ea3a80  0x00007c9496ed890d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/conversion.cpython-311-x86_64-linux-gnu.so
+0x00007c949d37d600  0x00007c949d38352d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/base.cpython-311-x86_64-linux-gnu.so
+0x00007c9496b09bc0  0x00007c9496bc6c67  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/offsets.cpython-311-x86_64-linux-gnu.so
+0x00007c9496968b40  0x00007c94969ceed8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/timestamps.cpython-311-x86_64-linux-gnu.so
+0x00007c949c9a97c0  0x00007c949c9c9468  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/nattype.cpython-311-x86_64-linux-gnu.so
+0x00007c94968d1c40  0x00007c949693e9cf  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/timedeltas.cpython-311-x86_64-linux-gnu.so
+0x00007c9496e5c9c0  0x00007c9496e8dd77  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/timezones.cpython-311-x86_64-linux-gnu.so
+0x00007c949d372050  0x00007c949d376211  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_zoneinfo.cpython-311-x86_64-linux-gnu.so
+0x00007c94968799c0  0x00007c94968b662f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/fields.cpython-311-x86_64-linux-gnu.so
+0x00007c9496826a00  0x00007c9496862b78  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/tzconversion.cpython-311-x86_64-linux-gnu.so
+0x00007c949afee6a0  0x00007c949aff9bd9  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/properties.cpython-311-x86_64-linux-gnu.so
+0x00007c94967bbc40  0x00007c949680b02c  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/parsing.cpython-311-x86_64-linux-gnu.so
+0x00007c949675bac0  0x00007c94967a1f65  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/strptime.cpython-311-x86_64-linux-gnu.so
+0x00007c94966dfb00  0x00007c9496733b30  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/period.cpython-311-x86_64-linux-gnu.so
+0x00007c949659f980  0x00007c94965c82da  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslibs/vectorized.cpython-311-x86_64-linux-gnu.so
+0x00007c949bdf15c0  0x00007c949bdf780f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/ops_dispatch.cpython-311-x86_64-linux-gnu.so
+0x00007c949620cb40  0x00007c94963f033f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/algos.cpython-311-x86_64-linux-gnu.so
+0x00007c94964cdc00  0x00007c9496571bec  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/lib.cpython-311-x86_64-linux-gnu.so
+0x00007c9496027040  0x00007c94960c0fd6  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_compute.cpython-311-x86_64-linux-gnu.so
+0x00007c9495cf9050  0x00007c9495cfc121  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/unicodedata.cpython-311-x86_64-linux-gnu.so
+0x00007c94964869c0  0x00007c94964b34d4  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/ops.cpython-311-x86_64-linux-gnu.so
+0x00007c94964519a0  0x00007c9496474672  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/hashing.cpython-311-x86_64-linux-gnu.so
+0x00007c9496e3b740  0x00007c9496e4ddb2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/arrays.cpython-311-x86_64-linux-gnu.so
+0x00007c9495baaa80  0x00007c9495be6ef9  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/tslib.cpython-311-x86_64-linux-gnu.so
+0x00007c94959b39c0  0x00007c9495a8d630  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/sparse.cpython-311-x86_64-linux-gnu.so
+0x00007c949594da40  0x00007c94959967f0  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/internals.cpython-311-x86_64-linux-gnu.so
+0x00007c949643e660  0x00007c94964453e1  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/indexing.cpython-311-x86_64-linux-gnu.so
+0x00007c94956fcb60  0x00007c94957a5eaf  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/index.cpython-311-x86_64-linux-gnu.so
+0x00007c949590d9c0  0x00007c949593740a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/writers.cpython-311-x86_64-linux-gnu.so
+0x00007c949559da40  0x00007c94956d899f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/join.cpython-311-x86_64-linux-gnu.so
+0x00007c949c99c050  0x00007c949c99ea31  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/mmap.cpython-311-x86_64-linux-gnu.so
+0x00007c94ef55a050  0x00007c94ef55aa31  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/grp.cpython-311-x86_64-linux-gnu.so
+0x00007c9495235b00  0x00007c9495283f57  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/window/aggregations.cpython-311-x86_64-linux-gnu.so
+0x00007c94958d9940  0x00007c94958fb997  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/window/indexers.cpython-311-x86_64-linux-gnu.so
+0x00007c94951e6a00  0x00007c949521e5b5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/reshape.cpython-311-x86_64-linux-gnu.so
+0x00007c9494e0cb40  0x00007c949505c76a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/groupby.cpython-311-x86_64-linux-gnu.so
+0x00007c949642c480  0x00007c94964348ba  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/json.cpython-311-x86_64-linux-gnu.so
+0x00007c9494c7ccc0  0x00007c9494ce999f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/parsers.cpython-311-x86_64-linux-gnu.so
+0x00007c94950c6760  0x00007c94950d857f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pandas/_libs/testing.cpython-311-x86_64-linux-gnu.so
+0x00007c94950b2050  0x00007c94950bb111  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/cmath.cpython-311-x86_64-linux-gnu.so
+0x00007c9494993350  0x00007c94949fa49b  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/_brotli.cpython-311-x86_64-linux-gnu.so
+0x00007c949c996090  0x00007c949c9961e5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/charset_normalizer/md.cpython-311-x86_64-linux-gnu.so
+0x00007c9494864440  0x00007c94948806f5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/charset_normalizer/md__mypyc.cpython-311-x86_64-linux-gnu.so
+0x00007c9496420050  0x00007c94964257c1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_multibytecodec.cpython-311-x86_64-linux-gnu.so
+0x00007c9494501b40  0x00007c9494546957  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/yaml/_yaml.cpython-311-x86_64-linux-gnu.so
+0x00007c949428a080  0x00007c94942de4e6  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_parquet.cpython-311-x86_64-linux-gnu.so
+0x00007c9494230a80  0x00007c94942662f8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_fs.cpython-311-x86_64-linux-gnu.so
+0x00007c94950987a0  0x00007c94950a80e8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_azurefs.cpython-311-x86_64-linux-gnu.so
+0x00007c949420d860  0x00007c949421dfd5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_hdfs.cpython-311-x86_64-linux-gnu.so
+0x00007c94941f18a0  0x00007c9494200dc0  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_gcsfs.cpython-311-x86_64-linux-gnu.so
+0x00007c94941c29e0  0x00007c94941e12f5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_s3fs.cpython-311-x86_64-linux-gnu.so
+0x00007c949711b050  0x00007c9497123401  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_elementtree.cpython-311-x86_64-linux-gnu.so
+0x00007c949710a050  0x00007c949710f021  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/pyexpat.cpython-311-x86_64-linux-gnu.so
+0x00007c94970d6040  0x00007c94970f899a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/../../libexpat.so.1
+0x00007c94970cb050  0x00007c94970cc591  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/termios.cpython-311-x86_64-linux-gnu.so
+0x00007c949afe6050  0x00007c949afe6c41  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/resource.cpython-311-x86_64-linux-gnu.so
+0x00007c94970b05c0  0x00007c94970c074c  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/multidict/_multidict.cpython-311-x86_64-linux-gnu.so
+0x00007c9497090800  0x00007c94970a449c  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/yarl/_quoting_c.cpython-311-x86_64-linux-gnu.so
+0x00007c94970786e0  0x00007c949708345a  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/propcache/_helpers_c.cpython-311-x86_64-linux-gnu.so
+0x00007c9497067580  0x00007c949706fa48  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/aiohttp/_http_writer.cpython-311-x86_64-linux-gnu.so
+0x00007c949405c000  0x00007c94940a8655  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/aiohttp/_http_parser.cpython-311-x86_64-linux-gnu.so
+0x00007c949705c4a0  0x00007c949705f9c9  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/aiohttp/_websocket/mask.cpython-311-x86_64-linux-gnu.so
+0x00007c9494022940  0x00007c9494044a2d  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/aiohttp/_websocket/reader_c.cpython-311-x86_64-linux-gnu.so
+0x00007c9497045720  0x00007c9497051061  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/frozenlist/_frozenlist.cpython-311-x86_64-linux-gnu.so
+0x00007c949508f050  0x00007c949508fe31  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_multiprocessing.cpython-311-x86_64-linux-gnu.so
+0x00007c949400b3d0  0x00007c94940151dc  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/xxhash/_xxhash.cpython-311-x86_64-linux-gnu.so
+0x00007c9494003040  0x00007c94940030f9  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libtorch_global_deps.so
+0x00007c948f00dfb0  0x00007c948f08b294  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/../../nvidia/cuda_runtime/lib/libcudart.so.12
+0x00007c948ec092a0  0x00007c948ec2d3a2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libgomp.so.1
+0x00007c9487a31220  0x00007c9487ff35c2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cublas/lib/libcublas.so.12
+0x00007c9456019ac0  0x00007c945d5b5102  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cublas/lib/libcublasLt.so.12
+0x00007c944f966f00  0x00007c94508e8ba4  Yes (*)     /lib/x86_64-linux-gnu/libcuda.so.1
+0x00007c944f404230  0x00007c944f41448e  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cudnn/lib/libcudnn.so.9
+0x00007c944901f170  0x00007c944d8b2892  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.so.12
+0x00007c9448200a80  0x00007c9448200ec5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc-builtins.so.12.8
+0x00007c9447ab1160  0x00007c9447ece590  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cuda_cupti/lib/libcupti.so.12
+0x00007c9436626a70  0x00007c9436a8e23a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cufft/lib/libcufft.so.11
+0x00007c942da0a970  0x00007c942db29fb2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/curand/lib/libcurand.so.10
+0x00007c94280c60c0  0x00007c942c5c5052  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/nvjitlink/lib/libnvJitLink.so.12
+0x00007c941086c450  0x00007c941131db72  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cusparse/lib/libcusparse.so.12
+0x00007c93f75ef8f0  0x00007c93fa5b4b92  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cusparselt/lib/libcusparseLt.so.0
+0x00007c93e6a515a0  0x00007c93e746ec32  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cusolver/lib/libcusolver.so.11
+0x00007c93cde43ba0  0x00007c93cdfae112  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/nccl/lib/libnccl.so.2
+0x00007c93c4433890  0x00007c93c469f452  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/nvshmem/lib/libnvshmem_host.so.3
+0x00007c93c4032ed0  0x00007c93c422906a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/cufile/lib/libcufile.so.0
+0x00007c93c3c02180  0x00007c93c3c05ed0  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/nvidia/nvtx/lib/libnvToolsExt.so.1
+0x00007c948f425050  0x00007c948f425115  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/_C.cpython-311-x86_64-linux-gnu.so
+0x00007c93c27beae0  0x00007c93c35a7d30  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libtorch_python.so
+0x00007c948f3eac50  0x00007c948f411a2e  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libtorch.so
+0x00007c948f3d6440  0x00007c948f3d902d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libshm.so
+0x00007c93ae09c100  0x00007c93bef6bd30  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so
+0x00007c93701877f0  0x00007c93735c2542  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so
+0x00007c948f348e40  0x00007c948f392356  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libc10_cuda.so
+0x00007c948ef02460  0x00007c948efaa958  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libc10.so
+0x00007c936ee1e8a0  0x00007c936eebeb72  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/torch/lib/libtorch_nvshmem.so
+0x00007c948f33a050  0x00007c948f33a641  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_posixshmem.cpython-311-x86_64-linux-gnu.so
+0x00007c948eb4dfc0  0x00007c948ebca46f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_dataset.cpython-311-x86_64-linux-gnu.so
+0x00007c948f3078c0  0x00007c948f32a1b0  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_acero.cpython-311-x86_64-linux-gnu.so
+0x00007c948f2bfac0  0x00007c948f2ea17a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_csv.cpython-311-x86_64-linux-gnu.so
+0x00007c948eec07c0  0x00007c948eecd95a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_json.cpython-311-x86_64-linux-gnu.so
+0x00007c948ee99a60  0x00007c948eeb017a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_substrait.cpython-311-x86_64-linux-gnu.so
+0x00007c948ee755c0  0x00007c948ee7b5c8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_dataset_orc.cpython-311-x86_64-linux-gnu.so
+0x00007c94554c3be0  0x00007c94554eed75  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_dataset_parquet.cpython-311-x86_64-linux-gnu.so
+0x00007c948ee5e660  0x00007c948ee69118  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_dataset_parquet_encryption.cpython-311-x86_64-linux-gnu.so
+0x00007c9455485b00  0x00007c94554a9d7c  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/_parquet_encryption.cpython-311-x86_64-linux-gnu.so
+0x00007c948ee54290  0x00007c948ee55719  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/pyarrow/libarrow_python_parquet_encryption.so.2300
+0x00007c948eb2a7c0  0x00007c948eb34a2c  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/_lib/_ccallback_c.cpython-311-x86_64-linux-gnu.so
+0x00007c9455450900  0x00007c945547150f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/_cyutility.cpython-311-x86_64-linux-gnu.so
+0x00007c948fe84280  0x00007c948fef7a84  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/numpy/fft/_pocketfft_umath.cpython-311-x86_64-linux-gnu.so
+0x00007c932c803280  0x00007c932cbc5e21  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/_sparsetools.cpython-311-x86_64-linux-gnu.so
+0x00007c944f69a800  0x00007c944f6f13b8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/_csparsetools.cpython-311-x86_64-linux-gnu.so
+0x00007c944f358b00  0x00007c944f3e69d5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/spatial/_ckdtree.cpython-311-x86_64-linux-gnu.so
+0x00007c9448a2dc00  0x00007c9448acb7bb  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/spatial/_qhull.cpython-311-x86_64-linux-gnu.so
+0x00007c948fe75700  0x00007c948fe7ce05  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/_lib/messagestream.cpython-311-x86_64-linux-gnu.so
+0x00007c944784fb00  0x00007c9447894022  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_fblas.cpython-311-x86_64-linux-gnu.so
+0x00007c932b0d3c00  0x00007c932c3af44d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/../../scipy.libs/libscipy_openblas-6cdc3b4a.so
+0x00007c932aa1d570  0x00007c932ac4da7b  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/../../scipy.libs/libgfortran-8f1e9814.so.5.0.0
+0x00007c932a6028d0  0x00007c932a62a30d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/../../scipy.libs/libquadmath-828275a7.so.0.0.0
+0x00007c92dd244b60  0x00007c92dd333c62  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_flapack.cpython-311-x86_64-linux-gnu.so
+0x00007c948fe30780  0x00007c948fe63dee  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_cythonized_array_utils.cpython-311-x86_64-linux-gnu.so
+0x00007c944f65a2c0  0x00007c944f664328  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/cython_lapack.cpython-311-x86_64-linux-gnu.so
+0x00007c94481e8700  0x00007c94481f88c8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_solve_toeplitz.cpython-311-x86_64-linux-gnu.so
+0x00007c94481be800  0x00007c94481dce45  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_batched_linalg.cpython-311-x86_64-linux-gnu.so
+0x00007c948eb10680  0x00007c948eb20208  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_decomp_lu_cython.cpython-311-x86_64-linux-gnu.so
+0x00007c94364c3880  0x00007c94364d792a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_matfuncs_schur_sqrtm.cpython-311-x86_64-linux-gnu.so
+0x00007c9427cbd880  0x00007c9427cd6da5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_matfuncs_expm.cpython-311-x86_64-linux-gnu.so
+0x00007c9448a0f440  0x00007c9448a20638  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_linalg_pythran.cpython-311-x86_64-linux-gnu.so
+0x00007c9448174780  0x00007c94481ad96b  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_decomp_update.cpython-311-x86_64-linux-gnu.so
+0x00007c9427c81ee0  0x00007c9427c8e908  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/cython_blas.cpython-311-x86_64-linux-gnu.so
+0x00007c948ee43620  0x00007c948ee4b06b  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/spatial/_voronoi.cpython-311-x86_64-linux-gnu.so
+0x00007c932aeabd40  0x00007c932afa05a5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/special/_ufuncs.cpython-311-x86_64-linux-gnu.so
+0x00007c932a86cb40  0x00007c932a9cd391  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/special/_ufuncs_cxx.cpython-311-x86_64-linux-gnu.so
+0x00007c9447809680  0x00007c9447819b8a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/special/_ellip_harm_2.cpython-311-x86_64-linux-gnu.so
+0x00007c92dd46b680  0x00007c92dd594c65  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/special/_special_ufuncs.cpython-311-x86_64-linux-gnu.so
+0x00007c93f5447440  0x00007c93f54f2755  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/special/_gufuncs.cpython-311-x86_64-linux-gnu.so
+0x00007c9427c4a780  0x00007c9427c71c70  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/special/_specfun.cpython-311-x86_64-linux-gnu.so
+0x00007c94878f65a0  0x00007c94878fb1dc  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/special/_comb.cpython-311-x86_64-linux-gnu.so
+0x00007c944f622640  0x00007c944f62b876  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/spatial/_hausdorff.cpython-311-x86_64-linux-gnu.so
+0x00007c9410790b40  0x00007c94107efcad  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/spatial/_distance_pybind.cpython-311-x86_64-linux-gnu.so
+0x00007c9427c2b1a0  0x00007c9427c419eb  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/spatial/_distance_wrap.cpython-311-x86_64-linux-gnu.so
+0x00007c93c3e7a9a0  0x00007c93c3ef1b59  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/spatial/transform/_rotation_cy.cpython-311-x86_64-linux-gnu.so
+0x00007c93f5410780  0x00007c93f543bdf6  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/spatial/transform/_rigid_transform_cy.cpython-311-x86_64-linux-gnu.so
+0x00007c93ace73b00  0x00007c93acecb845  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/linalg/_dsolve/_superlu.cpython-311-x86_64-linux-gnu.so
+0x00007c93c24a7840  0x00007c93c24d201a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/linalg/_eigen/arpack/_arpacklib.cpython-311-x86_64-linux-gnu.so
+0x00007c93c3e2a880  0x00007c93c3e4a1b0  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/linalg/_propack.cpython-311-x86_64-linux-gnu.so
+0x00007c942d8f0440  0x00007c942d8fb828  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_group_columns.cpython-311-x86_64-linux-gnu.so
+0x00007c93e68d48c0  0x00007c93e68f4e88  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_trlib/_trlib.cpython-311-x86_64-linux-gnu.so
+0x00007c936f7cb7c0  0x00007c936f7d8d25  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_lbfgsb.cpython-311-x86_64-linux-gnu.so
+0x00007c9427c0c680  0x00007c9427c2267d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_moduleTNC.cpython-311-x86_64-linux-gnu.so
+0x00007c936f7748c0  0x00007c936f7817b5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_slsqplib.cpython-311-x86_64-linux-gnu.so
+0x00007c94107752c0  0x00007c9410785b40  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_minpack.cpython-311-x86_64-linux-gnu.so
+0x00007c93e68c6540  0x00007c93e68cb198  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_lsq/givens_elimination.cpython-311-x86_64-linux-gnu.so
+0x00007c944f34d120  0x00007c944f34e4f8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_zeros.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc8133c0  0x00007c92dcc4d71d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_highspy/_core.cpython-311-x86_64-linux-gnu.so
+0x00007c936f712c80  0x00007c936f741c0d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_highspy/_highs_options.cpython-311-x86_64-linux-gnu.so
+0x00007c92dcd51800  0x00007c92dcdf2f0e  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/linalg/_decomp_interpolative.cpython-311-x86_64-linux-gnu.so
+0x00007c93e68b0540  0x00007c93e68bdba5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/_lib/_uarray/_uarray.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc702bc0  0x00007c92dc7e3ad0  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/fft/_pocketfft/pypocketfft.cpython-311-x86_64-linux-gnu.so
+0x00007c932d2cb7e0  0x00007c932d2e5808  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_bglu_dense.cpython-311-x86_64-linux-gnu.so
+0x00007c93e68a71c0  0x00007c93e68a8f06  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_lsap.cpython-311-x86_64-linux-gnu.so
+0x00007c93cdde1a00  0x00007c93cddf7ecd  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_pava_pybind.cpython-311-x86_64-linux-gnu.so
+0x00007c93c3bf5200  0x00007c93c3bfb23b  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/optimize/_direct.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc5c0900  0x00007c92dc5d2ba5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/integrate/_odepack.cpython-311-x86_64-linux-gnu.so
+0x00007c932c6e5340  0x00007c932c6fadbd  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/integrate/_quadpack.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc55b8c0  0x00007c92dc57638a  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/integrate/_vode.cpython-311-x86_64-linux-gnu.so
+0x00007c93c2479200  0x00007c93c2482402  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/integrate/_dop.cpython-311-x86_64-linux-gnu.so
+0x00007c932a84f240  0x00007c932a85f7e6  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/interpolate/_fitpack.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc2e7500  0x00007c92dc3236c2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/interpolate/_dfitpack.cpython-311-x86_64-linux-gnu.so
+0x00007c92dd44c300  0x00007c92dd45e2b5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/interpolate/_dierckx.cpython-311-x86_64-linux-gnu.so
+0x00007c92dcd1f780  0x00007c92dcd42e5e  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/interpolate/_ppoly.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc2b2900  0x00007c92dc2d9b58  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/interpolate/_interpnd.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc27b4c0  0x00007c92dc2a59f8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/interpolate/_rbfinterp_pythran.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc262700  0x00007c92dc271a9e  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/interpolate/_rgi_cython.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc1ee900  0x00007c92dc251835  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/stats/_stats.cpython-311-x86_64-linux-gnu.so
+0x00007c92dbe11d80  0x00007c92dbfc7a25  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/special/cython_special.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc0b7800  0x00007c92dc0d94fc  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/stats/_biasedurn.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc08e540  0x00007c92dc0aab18  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/stats/_stats_pythran.cpython-311-x86_64-linux-gnu.so
+0x00007c93c246f620  0x00007c93c2473a14  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/stats/_levy_stable/levyst.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc0776c0  0x00007c92dc083887  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/stats/_ansari_swilk_statistics.cpython-311-x86_64-linux-gnu.so
+0x00007c92dbb8d9c0  0x00007c92dbbec0e9  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/csgraph/_shortest_path.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc04d720  0x00007c92dc067aa0  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/csgraph/_tools.cpython-311-x86_64-linux-gnu.so
+0x00007c92dbb3d7e0  0x00007c92dbb7ade6  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/csgraph/_traversal.cpython-311-x86_64-linux-gnu.so
+0x00007c93ace40600  0x00007c93ace4afdf  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/csgraph/_min_spanning_tree.cpython-311-x86_64-linux-gnu.so
+0x00007c92dc021740  0x00007c92dc03f9bd  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/csgraph/_flow.cpython-311-x86_64-linux-gnu.so
+0x00007c92dbb11680  0x00007c92dbb2ee2f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/csgraph/_matching.cpython-311-x86_64-linux-gnu.so
+0x00007c92dbaef760  0x00007c92dbb04b4e  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/sparse/csgraph/_reordering.cpython-311-x86_64-linux-gnu.so
+0x00007c92dbac7780  0x00007c92dbae2ad1  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/stats/_sobol.cpython-311-x86_64-linux-gnu.so
+0x00007c92dbaac740  0x00007c92dbabbff8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/stats/_qmc_cy.cpython-311-x86_64-linux-gnu.so
+0x00007c92dba95600  0x00007c92dbaa096c  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/stats/_rcont/rcont.cpython-311-x86_64-linux-gnu.so
+0x00007c92dba78680  0x00007c92dba8b534  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/stats/_qmvnt_cy.cpython-311-x86_64-linux-gnu.so
+0x00007c92db84f380  0x00007c92db86f951  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/ndimage/_nd_image.cpython-311-x86_64-linux-gnu.so
+0x00007c936d6fa1c0  0x00007c936d6fcb29  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/ndimage/_rank_filter_1d.cpython-311-x86_64-linux-gnu.so
+0x00007c92db823800  0x00007c92db843399  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/ndimage/_ni_label.cpython-311-x86_64-linux-gnu.so
+0x00007c92db55c6c0  0x00007c92db595650  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/regex/_regex.cpython-311-x86_64-linux-gnu.so
+0x00007c936d6f3420  0x00007c936d6f5849  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/__check_build/_check_build.cpython-311-x86_64-linux-gnu.so
+0x00007c932ae9d570  0x00007c932ae9fe16  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/psutil/_psutil_linux.abi3.so
+0x00007c92db23d6e0  0x00007c92db245c90  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/_isfinite.cpython-311-x86_64-linux-gnu.so
+0x00007c92db20e900  0x00007c92db22f56f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/_cyutility.cpython-311-x86_64-linux-gnu.so
+0x00007c92db073780  0x00007c92db0fa9c7  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/sparsefuncs_fast.cpython-311-x86_64-linux-gnu.so
+0x00007c92db05a600  0x00007c92db068538  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/murmurhash.cpython-311-x86_64-linux-gnu.so
+0x00007c92db04a600  0x00007c92db04fd95  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/_openmp_helpers.cpython-311-x86_64-linux-gnu.so
+0x00007c92dae092a0  0x00007c92dae2d3a2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/../../scikit_learn.libs/libgomp-e985bcbb.so.1.0.0
+0x00007c92dadf16e0  0x00007c92dadfa0d2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/feature_extraction/_hashing_fast.cpython-311-x86_64-linux-gnu.so
+0x00007c92dadd1780  0x00007c92dade43d3  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/_vector_sentinel.cpython-311-x86_64-linux-gnu.so
+0x00007c92dac8e7c0  0x00007c92dacc3d84  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/preprocessing/_csr_polynomial_expansion.cpython-311-x86_64-linux-gnu.so
+0x00007c92dac2b7c0  0x00007c92dac7ee73  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/preprocessing/_target_encoder_fast.cpython-311-x86_64-linux-gnu.so
+0x00007c92dab03700  0x00007c92dab1c5bc  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/_seq_dataset.cpython-311-x86_64-linux-gnu.so
+0x00007c92daadd780  0x00007c92daaf58bf  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/_random.cpython-311-x86_64-linux-gnu.so
+0x00007c92daa86780  0x00007c92daacf907  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/linear_model/_cd_fast.cpython-311-x86_64-linux-gnu.so
+0x00007c92daa59720  0x00007c92daa78aae  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/_cython_blas.cpython-311-x86_64-linux-gnu.so
+0x00007c92daa44640  0x00007c92daa50184  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/cluster/_expected_mutual_info_fast.cpython-311-x86_64-linux-gnu.so
+0x00007c92da9cb940  0x00007c92daa2589d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/_dist_metrics.cpython-311-x86_64-linux-gnu.so
+0x00007c92da999880  0x00007c92da9b68f5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/_pairwise_distances_reduction/_argkmin.cpython-311-x86_64-linux-gnu.so
+0x00007c92da971880  0x00007c92da9883b2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/_pairwise_distances_reduction/_base.cpython-311-x86_64-linux-gnu.so
+0x00007c92da92c760  0x00007c92da95c1a9  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/_pairwise_distances_reduction/_datasets_pair.cpython-311-x86_64-linux-gnu.so
+0x00007c92da8e8840  0x00007c92da919fd8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/_pairwise_distances_reduction/_middle_term_computer.cpython-311-x86_64-linux-gnu.so
+0x00007c932cc122e0  0x00007c932cc130b9  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/_heap.cpython-311-x86_64-linux-gnu.so
+0x00007c932a8492e0  0x00007c932a84a427  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/_sorting.cpython-311-x86_64-linux-gnu.so
+0x00007c92da7c87c0  0x00007c92da7d835d  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/_pairwise_distances_reduction/_argkmin_classmode.cpython-311-x86_64-linux-gnu.so
+0x00007c92da795920  0x00007c92da7b36d2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/_pairwise_distances_reduction/_radius_neighbors.cpython-311-x86_64-linux-gnu.so
+0x00007c92da7707c0  0x00007c92da784102  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/_pairwise_distances_reduction/_radius_neighbors_classmode.cpython-311-x86_64-linux-gnu.so
+0x00007c92da751700  0x00007c92da762156  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/metrics/_pairwise_fast.cpython-311-x86_64-linux-gnu.so
+0x00007c92da5ee880  0x00007c92da7242df  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/_loss/_loss.cpython-311-x86_64-linux-gnu.so
+0x00007c92da4ca680  0x00007c92da4dced8  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/arrayfuncs.cpython-311-x86_64-linux-gnu.so
+0x00007c92da4a8680  0x00007c92da4be5d0  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/linear_model/_sag_fast.cpython-311-x86_64-linux-gnu.so
+0x00007c92da485980  0x00007c92da49c7f5  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/svm/_liblinear.cpython-311-x86_64-linux-gnu.so
+0x00007c92da42bc00  0x00007c92da470121  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/svm/_libsvm.cpython-311-x86_64-linux-gnu.so
+0x00007c92da3deb40  0x00007c92da4171a1  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/svm/_libsvm_sparse.cpython-311-x86_64-linux-gnu.so
+0x00007c92da3ab7e0  0x00007c92da3ca548  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/linear_model/_sgd_fast.cpython-311-x86_64-linux-gnu.so
+0x00007c92da39a540  0x00007c92da3a041c  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/utils/_weight_vector.cpython-311-x86_64-linux-gnu.so
+0x00007c92da38c5e0  0x00007c92da392663  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/io/matlab/_mio_utils.cpython-311-x86_64-linux-gnu.so
+0x00007c92da25a900  0x00007c92da27ca3c  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/io/matlab/_mio5_utils.cpython-311-x86_64-linux-gnu.so
+0x00007c92da23c700  0x00007c92da24de45  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/scipy/io/matlab/_streams.cpython-311-x86_64-linux-gnu.so
+0x00007c92da1da940  0x00007c92da22bc59  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/sklearn/datasets/_svmlight_format_fast.cpython-311-x86_64-linux-gnu.so
+0x00007c92d9ebc050  0x00007c92d9ec9b21  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_sqlite3.cpython-311-x86_64-linux-gnu.so
+0x00007c92d9d72080  0x00007c92d9e77a84  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/../../libsqlite3.so.0
+0x00007c92d9abb2a0  0x00007c92d9b531ff  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/safetensors/_safetensors_rust.abi3.so
+0x00007c944f348080  0x00007c944f34891c  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/markupsafe/_speedups.cpython-311-x86_64-linux-gnu.so
+0x00007c92d80dcb00  0x00007c92d815e64c  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/PIL/_imaging.cpython-311-x86_64-linux-gnu.so
+0x00007c92d801ac90  0x00007c92d808e4d3  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/PIL/../pillow.libs/libtiff-295fd75c.so.6.2.0
+0x00007c92d7f4b7c0  0x00007c92d7fe2125  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/PIL/../pillow.libs/libjpeg-18a3f47f.so.62.4.0
+0x00007c92d7ebee90  0x00007c92d7f2c6ae  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/PIL/../pillow.libs/libopenjp2-94e588ba.so.2.5.4
+0x00007c92d7e84740  0x00007c92d7e9e8f4  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/PIL/../pillow.libs/libxcb-64009ff3.so.1.1.0
+0x00007c92d7cc5740  0x00007c92d7e5426c  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/PIL/../pillow.libs/libzstd-761a17b6.so.1.5.7
+0x00007c92d7c82590  0x00007c92d7caec5f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/PIL/../pillow.libs/liblzma-61b1002e.so.5.8.2
+0x00007c92d7a00ff0  0x00007c92d7a01cd2  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/PIL/../pillow.libs/libXau-154567c4.so.6.0.0
+0x00007c92d7269040  0x00007c92d76b711f  Yes (*)     /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/tokenizers/tokenizers.abi3.so
+0x00007c92dcd16050  0x00007c92dcd17f61  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_lsprof.cpython-311-x86_64-linux-gnu.so
+0x00007c92d1567040  0x00007c92d6752b34  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/site-packages/triton/_C/libtriton.so
+0x00007c942d8e9050  0x00007c942d8e97b1  Yes         /home/changc/.conda/envs/trafficllm-qwenvl/lib/python3.11/lib-dynload/_statistics.cpython-311-x86_64-linux-gnu.so
+0x00007c92c841bcb0  0x00007c92c85964c1  Yes (*)     /lib/x86_64-linux-gnu/libnvidia-ml.so.1
+0x00007c932ae95340  0x00007c932ae9637f  Yes (*)     /lib/x86_64-linux-gnu/libnss_mdns4_minimal.so.2
+(*): Shared library is missing debugging information.
+Warning: 'set logging off', an alias for the command 'set logging enabled', is deprecated.
+Use 'set logging enabled off'.
+

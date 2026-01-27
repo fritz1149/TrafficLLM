@@ -23,6 +23,8 @@ import os
 import sys
 import json
 import importlib.util
+import faulthandler
+import signal
 
 import numpy as np
 from datasets import load_dataset
@@ -49,6 +51,9 @@ from transformers import (
 from arguments import ModelArguments, DataTrainingArguments
 
 logger = logging.getLogger(__name__)
+
+faulthandler.enable(all_threads=True)
+faulthandler.register(signal.SIGUSR1, all_threads=True)
 
 def main():
     # if os.environ['MODEL'] == 'qwen':
