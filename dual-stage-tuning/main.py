@@ -136,6 +136,10 @@ def main():
                 low_cpu_mem_usage=True,
                 attn_implementation="flash_attention_2"
             )
+            print("flash attn")
+            print("attn_implementation =", getattr(model.config, "attn_implementation", None))
+            import sys
+            sys.stdout.flush()
         else:
             model = Qwen3VLForConditionalGeneration.from_pretrained(
                 model_args.model_name_or_path,
