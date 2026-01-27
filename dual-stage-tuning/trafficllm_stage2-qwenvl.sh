@@ -1,11 +1,10 @@
-<<<<<<< HEAD
 cd dual-stage-tuning
 
 LOG_FILE="../logs/train/$(date +%s)_$$.txt"
 mkdir -p "$(dirname "$LOG_FILE")"
 exec > >(tee -a "$LOG_FILE") 2>&1
 trap 'rc=$?; echo "[EXIT] $(date -Is) rag-corpus-index finished, exit_code=$rc, log=$LOG_FILE"' EXIT
-=======
+
 dataset_name=qq;
 PRE_SEQ_LEN=128;
 LR=2e-2 #TODO: 有待优化;
@@ -19,7 +18,6 @@ export MODEL=qwen;
 
 # 创建日志目录;
 mkdir -p ../logs/train;
->>>>>>> a8be7ed (1)
 
 source /work/miniconda3/etc/profile.d/conda.sh
 conda activate trafficllm-qwenvl
@@ -40,11 +38,8 @@ python main.py \
     --do_predict \
     --bf16 \
     --flash_attn \
-<<<<<<< HEAD
     --model_parallel \
     --model_parallel_split_layer 18 \
-=======
->>>>>>> a8be7ed (1)
     --predict_with_generate \
     --train_file ../datasets/$dataset_name/$sample_num/${dataset_name}_detection_${granularity}_train.json \
     --test_file ../datasets/$dataset_name/$sample_num/${dataset_name}_detection_${granularity}_test.json \
