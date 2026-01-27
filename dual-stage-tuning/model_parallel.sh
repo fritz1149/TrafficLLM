@@ -23,11 +23,9 @@ granularity=flow
 
 # 单进程运行，模型按层切分到两张 GPU
 python main_model_parallel.py \
-    --do_train \
     --do_predict \
     --bf16 \
     --prefix_projection \
-    --train_file ../datasets/$dataset_name/$sample_num/$max_source_length/${dataset_name}_detection_${granularity}_train.json \
     --test_file ../datasets/$dataset_name/$sample_num/$max_source_length/${dataset_name}_detection_${granularity}_test.json \
     --preprocessing_num_workers 10 \
     --prompt_column instruction \
@@ -40,7 +38,7 @@ python main_model_parallel.py \
     --max_source_length $((max_source_length + 100)) \
     --max_target_length 32 \
     --per_device_train_batch_size 1 \
-    --per_device_eval_batch_size 1 \
+    --per_device_eval_batch_size 8 \
     --gradient_accumulation_steps 16 \
     --num_train_epochs 10 \
     --logging_steps 1 \

@@ -139,7 +139,7 @@ def patch_get_prompt_for_mp(model, split_layer):
     model.get_prompt = _mp_get_prompt
 
 
-def generate_predictions(model, tokenizer, dataset, data_args, max_new_tokens):
+def generate_predictions(model, tokenizer, dataset, data_args, max_new_tokens, batch_size=1):
     """
     Generate predictions using model.generate().
     """
@@ -148,17 +148,30 @@ def generate_predictions(model, tokenizer, dataset, data_args, max_new_tokens):
     
     model.eval()
     
-    for i in tqdm(range(len(dataset)), desc="Generating"):
-        input_ids = torch.tensor([dataset[i]["input_ids"]], device="cuda:0")
-        attention_mask = torch.tensor([dataset[i]["attention_mask"]], device="cuda:0")
-        
-        # Get target labels
-        label_ids = dataset[i]["labels"]
-        valid_labels = [l for l in label_ids if l != -100]
-        target_text = tokenizer.decode(valid_labels, skip_special_tokens=True)
-        target_text = target_text.replace("<|im_end|>", "").strip()
-        targets.append(target_text)
-        
+    def collate_fn(batch):
+        input_ids = torch.tensor([item["input_ids"] for item in batch])
+        attention_mask = torch.tensor([item["attention_mask"] for item in batch])
+        labels = [item["labels"] for item in batch]
+        return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": labels}
+
+    dataloader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        collate_fn=collate_fn,
+        num_workers=0,
+    )
+
+    for batch in tqdm(dataloader, desc="Generating"):
+        input_ids = batch["input_ids"].to("cuda:0")
+        attention_mask = batch["attention_mask"].to("cuda:0")
+
+        for label_ids in batch["labels"]:
+            valid_labels = [l for l in label_ids if l != -100]
+            target_text = tokenizer.decode(valid_labels, skip_special_tokens=True)
+            target_text = target_text.replace("<|im_end|>", "").strip()
+            targets.append(target_text)
+
         with torch.no_grad():
             outputs = model.generate(
                 input_ids=input_ids,
@@ -169,11 +182,12 @@ def generate_predictions(model, tokenizer, dataset, data_args, max_new_tokens):
                 temperature=0.7,
                 pad_token_id=tokenizer.pad_token_id,
             )
-        
-        generated_ids = outputs[0][input_ids.shape[1]:]
-        pred_text = tokenizer.decode(generated_ids, skip_special_tokens=True)
-        pred_text = pred_text.replace("<|im_end|>", "").strip()
-        predictions.append(pred_text)
+
+        for i in range(outputs.shape[0]):
+            generated_ids = outputs[i][input_ids.shape[1]:]
+            pred_text = tokenizer.decode(generated_ids, skip_special_tokens=True)
+            pred_text = pred_text.replace("<|im_end|>", "").strip()
+            predictions.append(pred_text)
     
     return predictions, targets
 
@@ -428,6 +442,7 @@ def main():
                 eval_dataset,
                 data_args,
                 max_new_tokens,
+                batch_size=training_args.per_device_eval_batch_size,
             )
 
             print("\n*** Evaluation Results ***")
@@ -457,6 +472,7 @@ def main():
                 test_dataset,
                 data_args,
                 max_new_tokens,
+                batch_size=training_args.per_device_eval_batch_size,
             )
 
             print("\n*** Prediction Results ***")
