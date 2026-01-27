@@ -66,6 +66,13 @@ class ModelArguments:
         default=False
     )
 
+    model_parallel: bool = field(
+        default=False
+    )
+    model_parallel_split_layer: Optional[int] = field(
+        default=None
+    )
+
 
 @dataclass
 class DataTrainingArguments:

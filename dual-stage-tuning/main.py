@@ -110,7 +110,7 @@ def main():
     )
     # Load pretrained model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
-    qwen_vl_torch_dtype = None
+    qwen_vl_dtype = None
     if model_args.model_base == 'qwen-vl' and (not training_args.fp16) and (not training_args.bf16):
         if torch.cuda.is_available() and getattr(torch.cuda, "is_bf16_supported", lambda: False)():
             training_args.bf16 = True
@@ -118,9 +118,9 @@ def main():
             training_args.fp16 = True
     if model_args.model_base == 'qwen-vl':
         if training_args.bf16:
-            qwen_vl_torch_dtype = torch.bfloat16
+            qwen_vl_dtype = torch.bfloat16
         elif training_args.fp16:
-            qwen_vl_torch_dtype = torch.float16
+            qwen_vl_dtype = torch.float16
     
     if model_args.model_base == 'qwen':
         model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path)
@@ -132,23 +132,89 @@ def main():
         if model_args.flash_attn:
             model = Qwen3VLForConditionalGeneration.from_pretrained(
                 model_args.model_name_or_path,
-                torch_dtype=qwen_vl_torch_dtype,
-                low_cpu_mem_usage=True,
+                dtype=qwen_vl_dtype,
                 attn_implementation="flash_attention_2"
             )
             print("flash attn")
             print("attn_implementation =", getattr(model.config, "attn_implementation", None))
-            import sys
+            print("_attn_implementation =", getattr(model.config, "_attn_implementation", None))
             sys.stdout.flush()
         else:
             model = Qwen3VLForConditionalGeneration.from_pretrained(
                 model_args.model_name_or_path,
-                torch_dtype=qwen_vl_torch_dtype,
+                dtype=qwen_vl_dtype,
                 low_cpu_mem_usage=True
             )
+        model.visual = nn.Identity()
         from peft import PrefixTuningConfig, get_peft_model, TaskType
         peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=model_args.pre_seq_len, prefix_projection=model_args.prefix_projection)
         model = get_peft_model(model, peft_config)
+
+        if getattr(model_args, "model_parallel", False):
+            n_gpus = torch.cuda.device_count() if torch.cuda.is_available() else 0
+            if n_gpus < 2:
+                raise ValueError("model_parallel requires at least 2 CUDA devices")
+            num_hidden_layers = 36
+
+            split_layer = getattr(model_args, "model_parallel_split_layer", None)
+            if split_layer is None:
+                split_layer = num_hidden_layers // 2
+
+            device_map = {
+                "base_model.model.language_model.embed_tokens": "cuda:0",
+                "base_model.model.language_model.rotary_emb": "cuda:0",
+                "base_model.model.visual": "cuda:0",
+                "word_embeddings": "cuda:0",
+                "prompt_encoder": "cuda:0",
+                "base_model.lm_head": "cuda:1",
+                "base_model.model.language_model.norm": "cuda:1",
+                **{f"base_model.model.language_model.layers.{i}": "cuda:0" for i in range(0, split_layer)},
+                **{f"base_model.model.language_model.layers.{i}": "cuda:1" for i in range(split_layer, num_hidden_layers)},
+            }
+
+            from accelerate import dispatch_model
+            model = dispatch_model(model, device_map=device_map)
+
+            if hasattr(model, "get_prompt"):
+                _orig_get_prompt = model.get_prompt
+
+                def _mp_get_prompt(batch_size, max_cache_len):
+                    past_key_values = _orig_get_prompt(batch_size, max_cache_len)
+                    if past_key_values is None:
+                        return past_key_values
+
+                    # transformers DynamicCache-style object
+                    if hasattr(past_key_values, "layers") and isinstance(getattr(past_key_values, "layers"), list):
+                        for i, layer_cache in enumerate(past_key_values.layers):
+                            dev = torch.device("cuda:0" if i < split_layer else "cuda:1")
+                            if hasattr(layer_cache, "device"):
+                                layer_cache.device = dev
+                            if hasattr(layer_cache, "keys") and torch.is_tensor(layer_cache.keys) and layer_cache.keys.device != dev:
+                                layer_cache.keys = layer_cache.keys.to(dev)
+                            if hasattr(layer_cache, "values") and torch.is_tensor(layer_cache.values) and layer_cache.values.device != dev:
+                                layer_cache.values = layer_cache.values.to(dev)
+                        return past_key_values
+
+                    # legacy tuple(list) of per-layer (k, v)
+                    if isinstance(past_key_values, (list, tuple)):
+                        new_past = []
+                        for i, layer_past in enumerate(past_key_values):
+                            dev = torch.device("cuda:0" if i < split_layer else "cuda:1")
+                            if isinstance(layer_past, (list, tuple)) and len(layer_past) == 2:
+                                k, v = layer_past
+                                if torch.is_tensor(k) and k.device != dev:
+                                    k = k.to(dev)
+                                if torch.is_tensor(v) and v.device != dev:
+                                    v = v.to(dev)
+                                new_past.append((k, v))
+                            else:
+                                new_past.append(layer_past)
+                        return tuple(new_past)
+
+                    return past_key_values
+
+                model.get_prompt = _mp_get_prompt
+
         QWENVL_PAD_TOKEN = tokenizer.special_tokens_map.get("pad_token", None)
         assert QWENVL_PAD_TOKEN is not None
         QWENVL_PAD_ID = tokenizer.convert_tokens_to_ids([QWENVL_PAD_TOKEN])[0]

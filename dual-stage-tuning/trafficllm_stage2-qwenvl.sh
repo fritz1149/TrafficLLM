@@ -1,30 +1,40 @@
-PRE_SEQ_LEN=128
-LR=2e-2 #TODO: 有待优化
-NUM_GPUS=1
-# export CUDA_VISIBLE_DEVICES=0,1 不默认使用所有显卡，就取消注释
-time=$(date +"%Y%m%d%H%M%S")
-dataset_name=$1
-sample_num=500
-model=Qwen3-VL-8B-Instruct
-granularity=flow
-export MODEL=qwen
+cd dual-stage-tuning
 
-# 创建日志目录
-mkdir -p ../logs/train
+LOG_FILE="../logs/train/$(date +%s)_$$.txt"
+mkdir -p "$(dirname "$LOG_FILE")"
+exec > >(tee -a "$LOG_FILE") 2>&1
+trap 'rc=$?; echo "[EXIT] $(date -Is) rag-corpus-index finished, exit_code=$rc, log=$LOG_FILE"' EXIT
 
-torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
+source /opt/anaconda3/etc/profile.d/conda.sh
+conda activate trafficllm-qwenvl
+
+dataset_name=qq;
+PRE_SEQ_LEN=128;
+LR=2e-2 #TODO: 有待优化;
+NUM_GPUS=1;
+# export CUDA_VISIBLE_DEVICES=0,1 不默认使用所有显卡，就取消注释;
+time=$(date +"%Y%m%d%H%M%S");
+sample_num=500;
+model=Qwen3-VL-8B-Instruct;
+granularity=flow;
+export MODEL=qwen;
+
+python main.py \
     --do_train \
-    --do_eval \
     --do_predict \
+    --bf16 \
+    --flash_attn \
+    --model_parallel \
+    --model_parallel_split_layer 18 \
+    --predict_with_generate \
     --train_file ../datasets/$dataset_name/$sample_num/${dataset_name}_detection_${granularity}_train.json \
-    --validation_file ../datasets/$dataset_name/$sample_num/${dataset_name}_detection_${granularity}_val.json \
     --test_file ../datasets/$dataset_name/$sample_num/${dataset_name}_detection_${granularity}_test.json \
     --preprocessing_num_workers 10 \
     --prompt_column instruction \
     --response_column output \
     --overwrite_cache \
     --cache_dir ../cache \
-    --model_name_or_path ../../Bishe/$model \
+    --model_name_or_path ../../Bishe_2/$model \
     --output_dir ../models/$model/$dataset_name/$sample_num \
     --overwrite_output_dir \
     --max_source_length 5220 \
