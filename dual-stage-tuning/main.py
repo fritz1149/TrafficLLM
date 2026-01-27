@@ -184,33 +184,16 @@ def main():
                         return past_key_values
 
                     # transformers DynamicCache-style object
-                    if hasattr(past_key_values, "layers") and isinstance(getattr(past_key_values, "layers"), list):
-                        for i, layer_cache in enumerate(past_key_values.layers):
-                            dev = torch.device("cuda:0" if i < split_layer else "cuda:1")
-                            if hasattr(layer_cache, "device"):
-                                layer_cache.device = dev
-                            if hasattr(layer_cache, "keys") and torch.is_tensor(layer_cache.keys) and layer_cache.keys.device != dev:
-                                layer_cache.keys = layer_cache.keys.to(dev)
-                            if hasattr(layer_cache, "values") and torch.is_tensor(layer_cache.values) and layer_cache.values.device != dev:
-                                layer_cache.values = layer_cache.values.to(dev)
-                        return past_key_values
+                    assert hasattr(past_key_values, "layers") and isinstance(getattr(past_key_values, "layers"), list)
 
-                    # legacy tuple(list) of per-layer (k, v)
-                    if isinstance(past_key_values, (list, tuple)):
-                        new_past = []
-                        for i, layer_past in enumerate(past_key_values):
-                            dev = torch.device("cuda:0" if i < split_layer else "cuda:1")
-                            if isinstance(layer_past, (list, tuple)) and len(layer_past) == 2:
-                                k, v = layer_past
-                                if torch.is_tensor(k) and k.device != dev:
-                                    k = k.to(dev)
-                                if torch.is_tensor(v) and v.device != dev:
-                                    v = v.to(dev)
-                                new_past.append((k, v))
-                            else:
-                                new_past.append(layer_past)
-                        return tuple(new_past)
-
+                    for i, layer_cache in enumerate(past_key_values.layers):
+                        dev = torch.device("cuda:0" if i < split_layer else "cuda:1")
+                        if hasattr(layer_cache, "device"):
+                            layer_cache.device = dev
+                        if hasattr(layer_cache, "keys") and torch.is_tensor(layer_cache.keys) and layer_cache.keys.device != dev:
+                            layer_cache.keys = layer_cache.keys.to(dev)
+                        if hasattr(layer_cache, "values") and torch.is_tensor(layer_cache.values) and layer_cache.values.device != dev:
+                            layer_cache.values = layer_cache.values.to(dev)
                     return past_key_values
 
                 model.get_prompt = _mp_get_prompt
