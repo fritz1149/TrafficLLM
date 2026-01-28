@@ -251,12 +251,6 @@ def main():
     qwen_vl_dtype = torch.float16
     if training_args.bf16:
         qwen_vl_dtype = torch.bfloat16
-    elif not training_args.fp16:
-        if torch.cuda.is_available() and getattr(torch.cuda, "is_bf16_supported", lambda: False)():
-            qwen_vl_dtype = torch.bfloat16
-            training_args.bf16 = True
-        else:
-            training_args.fp16 = True
 
     # Load Qwen-VL model
     from transformers import Qwen3VLForConditionalGeneration
@@ -264,7 +258,7 @@ def main():
     if model_args.flash_attn:
         model = Qwen3VLForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
-            torch_dtype=qwen_vl_dtype,
+            dtype=qwen_vl_dtype,
             attn_implementation="flash_attention_2",
             low_cpu_mem_usage=True,
         )
@@ -272,7 +266,7 @@ def main():
     else:
         model = Qwen3VLForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
-            torch_dtype=qwen_vl_dtype,
+            dtype=qwen_vl_dtype,
             low_cpu_mem_usage=True,
         )
     
@@ -288,7 +282,8 @@ def main():
             prefix_projection=model_args.prefix_projection
         )
         model = get_peft_model(model, peft_config)
-        model.prompt_encoder.default.float()
+        prompt_encoder_dtype = torch.bfloat16 if training_args.bf16 else torch.float32
+        model.prompt_encoder = model.prompt_encoder.to(dtype=prompt_encoder_dtype)
 
     print("Trainable parameters:")
     for name, param in model.named_parameters():
@@ -535,6 +530,7 @@ def main():
             model.train()
             epoch_loss = 0.0
             optimizer.zero_grad()
+            accumulated_steps = 0
             
             progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch+1}/{num_epochs}")
             
@@ -560,37 +556,72 @@ def main():
                     )
                     loss = outputs.loss / training_args.gradient_accumulation_steps
                 
+                if not torch.isfinite(loss):
+                    postfix = {"loss": f"{loss.item() * training_args.gradient_accumulation_steps:.4f}"}
+                    progress_bar.set_postfix(postfix, refresh=False)
+                    sys.stdout.flush()
+                    sys.stderr.flush()
+                    continue
+                
                 if scaler:
                     scaler.scale(loss).backward()
                 else:
                     loss.backward()
                 
                 epoch_loss += loss.item() * training_args.gradient_accumulation_steps
+                accumulated_steps += 1
                 
                 grad_norm = None
-                if (step + 1) % training_args.gradient_accumulation_steps == 0:
+                if accumulated_steps == training_args.gradient_accumulation_steps:
                     if scaler:
                         scaler.unscale_(optimizer)
-                    grad_norm = torch.nn.utils.clip_grad_norm_(trainable_params, training_args.max_grad_norm)
+                    grads_finite = True
+                    for p in trainable_params:
+                        if p.grad is not None and not torch.isfinite(p.grad).all():
+                            grads_finite = False
+                            break
+                    if grads_finite:
+                        grad_norm = torch.nn.utils.clip_grad_norm_(trainable_params, training_args.max_grad_norm)
+                    else:
+                        grad_norm = torch.tensor(float("nan"))
                     if scaler:
+                        old_scale = scaler.get_scale()
                         scaler.step(optimizer)
                         scaler.update()
+                        new_scale = scaler.get_scale()
+                        if new_scale >= old_scale:
+                            scheduler.step()
+                            global_step += 1
                     else:
+                        if not torch.isfinite(grad_norm):
+                            optimizer.zero_grad()
+                            accumulated_steps = 0
+                            postfix = {"loss": f"{loss.item() * training_args.gradient_accumulation_steps:.4f}"}
+                            postfix["grad_norm"] = f"{grad_norm.item():.4f}"
+                            progress_bar.set_postfix(postfix, refresh=False)
+                            sys.stdout.flush()
+                            sys.stderr.flush()
+                            continue
                         optimizer.step()
-                    
-                    scheduler.step()
+                        scheduler.step()
+                        global_step += 1
                     optimizer.zero_grad()
-                    global_step += 1
+                    accumulated_steps = 0
                 
                 postfix = {"loss": f"{loss.item() * training_args.gradient_accumulation_steps:.4f}"}
                 if grad_norm is not None:
                     postfix["grad_norm"] = f"{grad_norm.item():.4f}"
                 progress_bar.set_postfix(postfix, refresh=False)
+                
+                sys.stdout.flush()
+                sys.stderr.flush()
             
             avg_loss = epoch_loss / len(train_dataloader)
             logger.info(f"Epoch {epoch+1} average loss: {avg_loss:.4f}")
 
             run_eval_predict(epoch_idx=epoch + 1)
+            sys.stdout.flush()
+            sys.stderr.flush()
         
         # Save model (only trainable parameters for prefix tuning)
         output_dir = training_args.output_dir

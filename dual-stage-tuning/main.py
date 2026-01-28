@@ -115,17 +115,9 @@ def main():
     )
     # Load pretrained model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
-    qwen_vl_dtype = None
-    if model_args.model_base == 'qwen-vl' and (not training_args.fp16) and (not training_args.bf16):
-        if torch.cuda.is_available() and getattr(torch.cuda, "is_bf16_supported", lambda: False)():
-            training_args.bf16 = True
-        else:
-            training_args.fp16 = True
-    if model_args.model_base == 'qwen-vl':
-        if training_args.bf16:
-            qwen_vl_dtype = torch.bfloat16
-        elif training_args.fp16:
-            qwen_vl_dtype = torch.float16
+    qwen_vl_dtype = torch.float16
+    if training_args.bf16:
+        qwen_vl_dtype = torch.bfloat16
     
     if model_args.model_base == 'qwen':
         model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path)
@@ -151,8 +143,17 @@ def main():
                 low_cpu_mem_usage=True
             )
         model.visual = nn.Identity()
-        from peft import PrefixTuningConfig, get_peft_model, TaskType
-        peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=model_args.pre_seq_len, prefix_projection=model_args.prefix_projection)
+        from peft import PrefixTuningConfig, LoraConfig, get_peft_model, TaskType
+        if getattr(model_args, "peft_type", "prefix") == "lora":
+            peft_config = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r=model_args.lora_r,
+                lora_alpha=model_args.lora_alpha,
+                lora_dropout=model_args.lora_dropout,
+                target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+            )
+        else:
+            peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=model_args.pre_seq_len, prefix_projection=model_args.prefix_projection)
         model = get_peft_model(model, peft_config)
 
         if getattr(model_args, "model_parallel", False):
@@ -565,7 +566,7 @@ def main():
             checkpoint = training_args.resume_from_checkpoint
         # elif last_checkpoint is not None:
         #     checkpoint = last_checkpoint
-        if model_args.model_base == 'qwen-vl':
+        if model_args.model_base == 'qwen-vl' and model_args.peft_type == 'prefix':
             pass
         else:
             model.gradient_checkpointing_enable()
@@ -573,7 +574,7 @@ def main():
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
         trainer.save_model()  # Saves the tokenizer too for easy upload
 
-        if model_args.model_base == 'qwen-vl':
+        if model_args.model_base == 'qwen-vl' and model_args.peft_type == 'prefix':
             pass
         else:
             model.gradient_checkpointing_disable()

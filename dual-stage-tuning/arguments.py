@@ -72,6 +72,22 @@ class ModelArguments:
     model_parallel_split_layer: Optional[int] = field(
         default=None
     )
+    peft_type: str = field(
+        default="prefix",
+        metadata={"help": "PEFT method to use: 'prefix' for PrefixTuning, 'lora' for LoRA"}
+    )
+    lora_r: int = field(
+        default=16,
+        metadata={"help": "LoRA r (rank) parameter"}
+    )
+    lora_alpha: int = field(
+        default=32,
+        metadata={"help": "LoRA alpha parameter"}
+    )
+    lora_dropout: float = field(
+        default=0.05,
+        metadata={"help": "LoRA dropout rate"}
+    )
 
 
 @dataclass
