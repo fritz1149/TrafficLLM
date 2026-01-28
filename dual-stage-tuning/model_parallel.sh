@@ -24,8 +24,10 @@ granularity=flow
 # 单进程运行，模型按层切分到两张 GPU
 python main_model_parallel.py \
     --do_predict \
+    --do_train \
     --bf16 \
     --prefix_projection \
+    --train_file ../datasets/$dataset_name/$sample_num/$max_source_length/${dataset_name}_detection_${granularity}_train.json \
     --test_file ../datasets/$dataset_name/$sample_num/$max_source_length/${dataset_name}_detection_${granularity}_test.json \
     --preprocessing_num_workers 10 \
     --prompt_column instruction \
@@ -47,4 +49,5 @@ python main_model_parallel.py \
     --learning_rate $LR \
     --pre_seq_len $PRE_SEQ_LEN \
     --model_base qwen-vl \
-    --model_parallel True 2>&1
+    --model_parallel True \
+    --model_parallel_split_layer 20 2>&1
