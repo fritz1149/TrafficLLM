@@ -37,14 +37,15 @@ model=Qwen3-VL-8B-Instruct;
 granularity=flow;
 export MODEL=qwen;
 
+
     # --model_parallel \
     # --model_parallel_split_layer 18 \
-    
+
 python main.py \
     --do_train \
     --do_predict \
     --bf16 \
-    --optim adamw_torch \
+    --flash_attn \
     --predict_with_generate \
     --train_file ../datasets/$dataset_name/$sample_num/$max_source_length/${dataset_name}_detection_${granularity}_train.json \
     --test_file ../datasets/$dataset_name/$sample_num/$max_source_length/${dataset_name}_detection_${granularity}_test.json \
@@ -56,7 +57,7 @@ python main.py \
     --model_name_or_path ../../Bishe_2/$model \
     --output_dir ../models/$model/$dataset_name/$sample_num/$max_source_length \
     --overwrite_output_dir \
-    --max_source_length $((max_source_length + 100)) \
+    --max_source_length 4196 \
     --max_target_length 32 \
     --per_device_train_batch_size 1 \
     --per_device_eval_batch_size 1 \
