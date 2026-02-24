@@ -165,17 +165,19 @@ def main():
             split_layer = getattr(model_args, "model_parallel_split_layer", None)
             if split_layer is None:
                 split_layer = num_hidden_layers // 2
+            print(model)
+            sys.stdout.flush()
 
             device_map = {
-                "base_model.model.language_model.embed_tokens": "cuda:0",
-                "base_model.model.language_model.rotary_emb": "cuda:0",
-                "base_model.model.visual": "cuda:0",
+                "base_model.model.model.language_model.embed_tokens": "cuda:0",
+                "base_model.model.model.language_model.rotary_emb": "cuda:0",
+                "base_model.model.model.visual": "cuda:0",
                 "word_embeddings": "cuda:0",
                 "prompt_encoder": "cuda:0",
-                "base_model.lm_head": "cuda:1",
-                "base_model.model.language_model.norm": "cuda:1",
-                **{f"base_model.model.language_model.layers.{i}": "cuda:0" for i in range(0, split_layer)},
-                **{f"base_model.model.language_model.layers.{i}": "cuda:1" for i in range(split_layer, num_hidden_layers)},
+                "base_model.model.lm_head": "cuda:1",
+                "base_model.model.model.language_model.norm": "cuda:1",
+                **{f"base_model.model.model.language_model.layers.{i}": "cuda:0" for i in range(0, split_layer)},
+                **{f"base_model.model.model.language_model.layers.{i}": "cuda:1" for i in range(split_layer, num_hidden_layers)},
             }
 
             from accelerate import dispatch_model

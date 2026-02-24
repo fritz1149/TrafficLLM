@@ -214,8 +214,8 @@ def get_td_prompt_components(task_name, granularity, second_label=None):
     elif task_name == "EVD":
         instruction = "Given the following traffic data <" + granularity + "> that contains protocol fields, " \
                      "traffic features, and payloads. Please conduct the TRAFFIC DETECTION TASK to determine " \
-                     "which behavior or application category the encrypted traffic belongs to. The categories " \
-                     "include 'aim, bittorrent, email, gmail, facebook, ftps, hangouts, icq, netflix, scp, skype, spotify, " \
+                     "which behavior or application category the encrypted traffic belongs to. The categories include " \
+                     "'aim, bittorrent, email, gmail, facebook, ftps, hangouts, icq, netflix, scp, skype, spotify, " \
                      "tor, torrent, vimeo, voipbuster, vpn-ftps, vpn-sftp, youtube'."
 
         output = second_label

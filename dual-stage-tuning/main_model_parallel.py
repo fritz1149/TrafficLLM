@@ -17,7 +17,13 @@ from datasets import load_dataset
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, DistributedSampler
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import MixedPrecision, ShardingStrategy, CPUOffload
+from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
+from functools import partial
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report
 from tqdm import tqdm
 
@@ -38,6 +44,28 @@ faulthandler.enable(all_threads=True)
 faulthandler.register(signal.SIGUSR1, all_threads=True)
 
 
+def setup_ddp():
+    """Initialize DDP environment."""
+    if not dist.is_initialized():
+        dist.init_process_group(backend="nccl")
+    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    torch.cuda.set_device(local_rank)
+    return local_rank, dist.get_rank(), dist.get_world_size()
+
+
+def cleanup_ddp():
+    """Clean up DDP."""
+    if dist.is_initialized():
+        dist.destroy_process_group()
+
+
+def is_main_process(use_distributed):
+    """Check if current process is the main process."""
+    if not use_distributed:
+        return True
+    return dist.get_rank() == 0
+
+
 def td_evaluation(predict_responses, target_responses, label_file):
     """
     Evaluation logic from evaluation.py - compute macro metrics.
@@ -45,30 +73,41 @@ def td_evaluation(predict_responses, target_responses, label_file):
     with open(label_file, "r", encoding="utf-8") as fin:
         label_dict = json.load(fin)
 
-    preds = []
-    labels = []
+    preds_all = []  # 用于accuracy计算（包含无效预测）
+    labels_all = []
+    preds_valid = []  # 用于precision/recall/f1计算（只包含有效预测）
+    labels_valid = []
+    
     for predict_response, target_response in zip(predict_responses, target_responses):
         if ' ' in predict_response:
             predict_response = predict_response.split(" ")[-1]
-        labels.append(label_dict[target_response])
+        label_id = label_dict[target_response]
+        labels_all.append(label_id)
+        
         if predict_response in label_dict.keys():
-            preds.append(label_dict[predict_response])
+            pred_id = label_dict[predict_response]
+            preds_all.append(pred_id)
+            # 有效预测，加入precision/recall/f1计算
+            preds_valid.append(pred_id)
+            labels_valid.append(label_id)
         else:
-            preds.append(len(label_dict.keys()))
+            # 无效预测，只计入accuracy（算作错误）
+            preds_all.append(len(label_dict.keys()))
 
     metrics = {
-        "accuracy": accuracy_score(labels, preds),
-        "precision_macro": precision_score(labels, preds, average='macro', zero_division=0),
-        "recall_macro": recall_score(labels, preds, average='macro', zero_division=0),
-        "f1_macro": f1_score(labels, preds, average='macro', zero_division=0),
+        "accuracy": accuracy_score(labels_all, preds_all),
+        "precision_macro": precision_score(labels_valid, preds_valid, average='macro', zero_division=0) if preds_valid else 0,
+        "recall_macro": recall_score(labels_valid, preds_valid, average='macro', zero_division=0) if preds_valid else 0,
+        "f1_macro": f1_score(labels_valid, preds_valid, average='macro', zero_division=0) if preds_valid else 0,
     }
     
     print("acc:", metrics["accuracy"])
     print("precision:", metrics["precision_macro"])
     print("recall:", metrics["recall_macro"])
     print("f1:", metrics["f1_macro"])
-    print("confusion matrix:\n", confusion_matrix(labels, preds))
-    print("classification report:\n", classification_report(labels, preds, zero_division=0))
+    print("confusion matrix:\n", confusion_matrix(labels_valid, preds_valid) if preds_valid else "No valid predictions")
+    print("classification report:\n", classification_report(labels_valid, preds_valid, zero_division=0) if preds_valid else "No valid predictions")
+    print(f"invalid predictions: {len(preds_all) - len(preds_valid)} / {len(preds_all)}")
     
     return metrics
 
@@ -96,15 +135,15 @@ def create_device_map(model_args, num_hidden_layers=36):
         split_layer = num_hidden_layers // 2
     
     device_map = {
-        "base_model.model.language_model.embed_tokens": "cuda:0",
-        "base_model.model.language_model.rotary_emb": "cuda:0",
-        "base_model.model.visual": "cuda:0",
+        "base_model.model.model.language_model.embed_tokens": "cuda:0",
+        "base_model.model.model.language_model.rotary_emb": "cuda:0",
+        "base_model.model.model.visual": "cuda:0",
         "word_embeddings": "cuda:0",
         "prompt_encoder": "cuda:0",
-        "base_model.lm_head": "cuda:1",
-        "base_model.model.language_model.norm": "cuda:1",
-        **{f"base_model.model.language_model.layers.{i}": "cuda:0" for i in range(0, split_layer)},
-        **{f"base_model.model.language_model.layers.{i}": "cuda:1" for i in range(split_layer, num_hidden_layers)},
+        "base_model.model.lm_head": "cuda:1",
+        "base_model.model.model.language_model.norm": "cuda:1",
+        **{f"base_model.model.model.language_model.layers.{i}": "cuda:0" for i in range(0, split_layer)},
+        **{f"base_model.model.model.language_model.layers.{i}": "cuda:1" for i in range(split_layer, num_hidden_layers)},
     }
     return device_map, split_layer
 
@@ -177,9 +216,7 @@ def generate_predictions(model, tokenizer, dataset, data_args, max_new_tokens, b
                 input_ids=input_ids,
                 attention_mask=attention_mask,
                 max_new_tokens=max_new_tokens,
-                do_sample=True,
-                top_p=0.7,
-                temperature=0.7,
+                do_sample=False,
                 pad_token_id=tokenizer.pad_token_id,
             )
 
@@ -220,10 +257,16 @@ def main():
 
     set_seed(training_args.seed)
 
+    # DDP/FSDP setup
+    use_ddp = getattr(model_args, "use_ddp", False)
+    use_fsdp = getattr(model_args, "use_fsdp", False)
+    local_rank, global_rank, world_size = 0, 0, 1
+    if use_ddp or use_fsdp:
+        local_rank, global_rank, world_size = setup_ddp()
+        logger.info(f"Distributed initialized: local_rank={local_rank}, global_rank={global_rank}, world_size={world_size}")
+
     # Check GPU availability
     n_gpus = torch.cuda.device_count()
-    if n_gpus < 2:
-        raise ValueError("Model parallel requires at least 2 CUDA devices")
     
     # Load dataset
     data_files = {}
@@ -248,9 +291,12 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
     
     # Determine dtype
-    qwen_vl_dtype = torch.float16
     if training_args.bf16:
         qwen_vl_dtype = torch.bfloat16
+    elif training_args.fp16:
+        qwen_vl_dtype = torch.float16
+    else:
+        qwen_vl_dtype = torch.float32
 
     # Load Qwen-VL model
     from transformers import Qwen3VLForConditionalGeneration
@@ -271,16 +317,22 @@ def main():
         )
     
     # Replace visual encoder with Identity
-    model.visual = nn.Identity()
+    model.model.visual = nn.Identity()
     
     # Apply PEFT prefix tuning
-    if model_args.pre_seq_len is not None:
-        from peft import PrefixTuningConfig, get_peft_model, TaskType
-        peft_config = PrefixTuningConfig(
-            task_type=TaskType.CAUSAL_LM, 
-            num_virtual_tokens=model_args.pre_seq_len, 
-            prefix_projection=model_args.prefix_projection
+    
+    from peft import PrefixTuningConfig, LoraConfig, get_peft_model, TaskType
+    if getattr(model_args, "peft_type", "prefix") == "lora":
+        peft_config = LoraConfig(
+            task_type=TaskType.CAUSAL_LM,
+            r=model_args.lora_r,
+            lora_alpha=model_args.lora_alpha,
+            lora_dropout=model_args.lora_dropout,
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
         )
+        model = get_peft_model(model, peft_config)
+    else:
+        peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=model_args.pre_seq_len, prefix_projection=model_args.prefix_projection)
         model = get_peft_model(model, peft_config)
         prompt_encoder_dtype = torch.bfloat16 if training_args.bf16 else torch.float32
         model.prompt_encoder = model.prompt_encoder.to(dtype=prompt_encoder_dtype)
@@ -289,19 +341,71 @@ def main():
     for name, param in model.named_parameters():
         if param.requires_grad:
             print(f"  {name}")
+    model.print_trainable_parameters()
 
     # Get number of hidden layers
     num_hidden_layers = 36
     
     # Create device map and dispatch model
-    device_map, split_layer = create_device_map(model_args, num_hidden_layers)
-    print(f"Using model parallel with split_layer={split_layer}, num_hidden_layers={num_hidden_layers}")
-    print(f"Device map: {device_map}")
-    
-    model = dispatch_model(model, device_map=device_map)
-    
-    # Patch get_prompt for model parallel
-    patch_get_prompt_for_mp(model, split_layer)
+    if getattr(model_args, "model_parallel", False):
+        device_map, split_layer = create_device_map(model_args, num_hidden_layers)
+        print(f"Using model parallel with split_layer={split_layer}, num_hidden_layers={num_hidden_layers}")
+        print(f"Device map: {device_map}")
+        
+        model = dispatch_model(model, device_map=device_map)
+        # Patch get_prompt for model parallel
+        patch_get_prompt_for_mp(model, split_layer)
+    elif use_fsdp:
+        # FSDP mode: shards model across GPUs for memory efficiency
+        from transformers.models.qwen3_vl.modeling_qwen3_vl import Qwen3VLTextDecoderLayer
+        
+        # Enable gradient checkpointing BEFORE FSDP wrapping for LoRA
+        is_lora = getattr(model_args, "peft_type", "prefix") == "lora"
+        if is_lora:
+            model.gradient_checkpointing_enable()
+            model.enable_input_require_grads()
+            logger.info("Gradient checkpointing enabled before FSDP wrapping")
+        
+        # Convert all parameters to uniform dtype before FSDP wrapping
+        # This is required because LoRA adapters are created in float32 by default
+        target_dtype = torch.bfloat16 if training_args.bf16 else torch.float16
+        model = model.to(target_dtype)
+        logger.info(f"Converted all model parameters to {target_dtype} for FSDP")
+        
+        # Mixed precision policy
+        mp_policy = MixedPrecision(
+            param_dtype=target_dtype,
+            reduce_dtype=target_dtype,
+            buffer_dtype=target_dtype,
+        )
+        
+        # Auto wrap policy for transformer layers
+        auto_wrap_policy = partial(
+            transformer_auto_wrap_policy,
+            transformer_layer_cls={Qwen3VLTextDecoderLayer},
+        )
+        
+        torch.cuda.set_device(local_rank)
+        model = FSDP(
+            model,
+            sharding_strategy=ShardingStrategy.FULL_SHARD,
+            mixed_precision=mp_policy,
+            auto_wrap_policy=auto_wrap_policy,
+            # cpu_offload=CPUOffload(offload_params=True),  # Offload params to CPU to save GPU memory
+            device_id=local_rank,
+            use_orig_params=True,  # Required for LoRA
+        )
+        logger.info(f"Model wrapped with FSDP on cuda:{local_rank} with CPU offload")
+    elif use_ddp:
+        # DDP mode: place model on local GPU
+        model = model.to(f"cuda:{local_rank}")
+        # static_graph=True is required for compatibility with gradient_checkpointing
+        model = DDP(model, device_ids=[local_rank], output_device=local_rank, find_unused_parameters=True, static_graph=True)
+        logger.info(f"Model wrapped with DDP on cuda:{local_rank}")
+    else:
+        # Single GPU mode: move model to cuda:0
+        model = model.to("cuda:0")
+        logger.info("Model moved to cuda:0 (single GPU mode)")
 
     # Get pad token id
     QWENVL_PAD_TOKEN = tokenizer.special_tokens_map.get("pad_token", None)
@@ -501,17 +605,31 @@ def main():
             labels = torch.tensor([item["labels"] for item in batch])
             return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": labels}
         
+        # Use DistributedSampler for DDP/FSDP
+        use_distributed = use_ddp or use_fsdp
+        train_sampler = DistributedSampler(train_dataset, num_replicas=world_size, rank=global_rank, shuffle=True) if use_distributed else None
         train_dataloader = DataLoader(
             train_dataset,
             batch_size=training_args.per_device_train_batch_size,
             shuffle=True,
+            sampler=train_sampler,
             collate_fn=collate_fn,
             num_workers=0,
         )
         
         # Setup optimizer - only optimize trainable parameters
         trainable_params = [p for p in model.parameters() if p.requires_grad]
-        optimizer = AdamW(trainable_params, lr=training_args.learning_rate, weight_decay=training_args.weight_decay)
+        
+        # bf16 + fp32 master weights for better numerical stability
+        use_master_weights = getattr(model_args, "bf16_master_weights", False) and training_args.bf16
+        if use_master_weights:
+            # Create fp32 copies of trainable parameters as master weights
+            master_params = [p.detach().clone().float().requires_grad_(True) for p in trainable_params]
+            optimizer = AdamW(master_params, lr=training_args.learning_rate, betas=(0.9, 0.999), eps=1e-8, weight_decay=1e-4)
+            logger.info("Using bf16 training with fp32 master weights for better numerical stability")
+        else:
+            master_params = None
+            optimizer = AdamW(trainable_params, lr=training_args.learning_rate, weight_decay=training_args.weight_decay)
         
         # Setup scheduler
         num_training_steps = len(train_dataloader) * int(training_args.num_train_epochs) // training_args.gradient_accumulation_steps
@@ -519,12 +637,23 @@ def main():
         scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps)
         
         num_epochs = int(training_args.num_train_epochs)
+        if num_epochs > data_args.stop_epochs:
+            num_epochs = data_args.stop_epochs
         global_step = 0
         
-        # Mixed precision scaler
-        scaler = torch.amp.GradScaler('cuda') if training_args.fp16 else None
-        use_amp = training_args.fp16 or training_args.bf16
+        # Mixed precision scaler (not needed for FSDP - it handles mixed precision internally)
+        # Also GradScaler is only for fp16, not bf16
+        scaler = torch.amp.GradScaler('cuda') if (training_args.fp16 and not use_fsdp) else None
+        use_amp = (training_args.fp16 or training_args.bf16) and not use_fsdp  # FSDP handles AMP via MixedPrecision
         amp_dtype = torch.bfloat16 if training_args.bf16 else torch.float16
+        
+        # Enable gradient checkpointing for LoRA mode (skip if FSDP, already enabled before wrapping)
+        is_lora = getattr(model_args, "peft_type", "prefix") == "lora"
+        if is_lora and not use_fsdp:
+            base_model = model.module if use_ddp else model
+            base_model.gradient_checkpointing_enable()
+            base_model.enable_input_require_grads()
+            logger.info("Gradient checkpointing enabled for LoRA training")
         
         for epoch in range(num_epochs):
             model.train()
@@ -532,13 +661,29 @@ def main():
             optimizer.zero_grad()
             accumulated_steps = 0
             
-            progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch+1}/{num_epochs}")
+            # Set epoch for DistributedSampler to ensure proper shuffling
+            if train_sampler is not None:
+                train_sampler.set_epoch(epoch)
+            
+            progress_bar = tqdm(train_dataloader, desc=f"Epoch {epoch+1}/{num_epochs}", disable=not is_main_process(use_distributed))
             
             for step, batch in enumerate(progress_bar):
-                # Move to first GPU (dispatch_model will handle cross-GPU)
-                input_ids = batch["input_ids"].to("cuda:0")
-                attention_mask = batch["attention_mask"].to("cuda:0")
-                labels = batch["labels"].to("cuda:1")  # Labels should be on same device as lm_head output
+                # Move to appropriate GPU based on mode
+                if use_ddp or use_fsdp:
+                    device = f"cuda:{local_rank}"
+                    input_ids = batch["input_ids"].to(device)
+                    attention_mask = batch["attention_mask"].to(device)
+                    labels = batch["labels"].to(device)
+                elif getattr(model_args, "model_parallel", False):
+                    # Model parallel: dispatch_model will handle cross-GPU
+                    input_ids = batch["input_ids"].to("cuda:0")
+                    attention_mask = batch["attention_mask"].to("cuda:0")
+                    labels = batch["labels"].to("cuda:1")
+                else:
+                    # Single GPU mode
+                    input_ids = batch["input_ids"].to("cuda:0")
+                    attention_mask = batch["attention_mask"].to("cuda:0")
+                    labels = batch["labels"].to("cuda:0")
                 
                 if use_amp:
                     with torch.amp.autocast('cuda', dtype=amp_dtype):
@@ -573,15 +718,27 @@ def main():
                 
                 grad_norm = None
                 if accumulated_steps == training_args.gradient_accumulation_steps:
+                    # For master weights: copy gradients from bf16 params to fp32 master params
+                    if use_master_weights:
+                        for mp, p in zip(master_params, trainable_params):
+                            if p.grad is not None:
+                                if mp.grad is None:
+                                    mp.grad = p.grad.float()
+                                else:
+                                    mp.grad.copy_(p.grad)
+                    
                     if scaler:
                         scaler.unscale_(optimizer)
+                    
+                    # Check gradient finiteness
+                    params_to_check = master_params if use_master_weights else trainable_params
                     grads_finite = True
-                    for p in trainable_params:
+                    for p in params_to_check:
                         if p.grad is not None and not torch.isfinite(p.grad).all():
                             grads_finite = False
                             break
                     if grads_finite:
-                        grad_norm = torch.nn.utils.clip_grad_norm_(trainable_params, training_args.max_grad_norm)
+                        grad_norm = torch.nn.utils.clip_grad_norm_(params_to_check, training_args.max_grad_norm)
                     else:
                         grad_norm = torch.tensor(float("nan"))
                     if scaler:
@@ -590,6 +747,10 @@ def main():
                         scaler.update()
                         new_scale = scaler.get_scale()
                         if new_scale >= old_scale:
+                            # For master weights: copy updated fp32 weights back to bf16 model params
+                            if use_master_weights:
+                                for mp, p in zip(master_params, trainable_params):
+                                    p.data.copy_(mp.data)
                             scheduler.step()
                             global_step += 1
                     else:
@@ -603,6 +764,11 @@ def main():
                             sys.stderr.flush()
                             continue
                         optimizer.step()
+                        
+                        # For master weights: copy updated fp32 weights back to bf16 model params
+                        if use_master_weights:
+                            for mp, p in zip(master_params, trainable_params):
+                                p.data.copy_(mp.data)
                         scheduler.step()
                         global_step += 1
                     optimizer.zero_grad()
@@ -617,25 +783,55 @@ def main():
                 sys.stderr.flush()
             
             avg_loss = epoch_loss / len(train_dataloader)
-            logger.info(f"Epoch {epoch+1} average loss: {avg_loss:.4f}")
+            if is_main_process(use_distributed):
+                logger.info(f"Epoch {epoch+1} average loss: {avg_loss:.4f}")
 
-            run_eval_predict(epoch_idx=epoch + 1)
+            # Disable gradient checkpointing before eval/predict for LoRA mode (skip for FSDP)
+            if is_lora and not use_fsdp:
+                base_model.gradient_checkpointing_disable()
+                base_model.disable_input_require_grads()
+            
+            # Synchronize before eval/predict
+            if use_distributed:
+                dist.barrier()
+            
+            # Only run eval/predict on main process
+            if is_main_process(use_distributed) and (epoch == 3 or epoch == 4):
+                run_eval_predict(epoch_idx=epoch + 1)
+            
+            # Synchronize after eval/predict
+            if use_distributed:
+                dist.barrier()
+            
+            # Re-enable gradient checkpointing after eval/predict for LoRA mode (skip for FSDP)
+            if is_lora and not use_fsdp:
+                base_model.gradient_checkpointing_enable()
+                base_model.enable_input_require_grads()
+            
             sys.stdout.flush()
             sys.stderr.flush()
         
-        # Save model (only trainable parameters for prefix tuning)
-        output_dir = training_args.output_dir
-        os.makedirs(output_dir, exist_ok=True)
-        
-        # Save PEFT model
-        if model_args.pre_seq_len is not None:
-            model.save_pretrained(output_dir)
-            tokenizer.save_pretrained(output_dir)
-            logger.info(f"Model saved to {output_dir}")
+        # Save model (only trainable parameters for prefix tuning) - only on main process
+        # if is_main_process(use_ddp):
+        #     output_dir = training_args.output_dir
+        #     os.makedirs(output_dir, exist_ok=True)
+            
+        #     # Save PEFT model
+        #     save_model = model.module if use_ddp else model
+        #     if model_args.pre_seq_len is not None or getattr(model_args, "peft_type", "prefix") == "lora":
+        #         save_model.save_pretrained(output_dir)
+        #         tokenizer.save_pretrained(output_dir)
+        #         logger.info(f"Model saved to {output_dir}")
 
     if not training_args.do_train:
-        run_eval_predict()
+        use_distributed = use_ddp or use_fsdp
+        if is_main_process(use_distributed):
+            run_eval_predict()
 
+    # Cleanup distributed
+    if use_ddp or use_fsdp:
+        cleanup_ddp()
+    
     logger.info("Done!")
 
 

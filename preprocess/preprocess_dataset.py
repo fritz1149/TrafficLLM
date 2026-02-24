@@ -26,6 +26,7 @@ def get_args():
     parser.add_argument("--sampling_method", type=str, help="sampling_method", required=False)
     parser.add_argument("--max_sampling_number", type=int, help="max_sampling_number", required=False)
     parser.add_argument("--split_mode", action="store_true", help="load train/test/val splits from directories")
+    parser.add_argument("--inference_mode", action="store_true")
     parser.add_argument("--flow_feature", type=str, help="flow feature type", required=True)
     parser.add_argument("--max_packet_number", type=int, help="max_packet_number", required=False)
     parser.add_argument("--max_token_length", type=int, help="max_token_length", required=False)

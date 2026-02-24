@@ -88,6 +88,18 @@ class ModelArguments:
         default=0.05,
         metadata={"help": "LoRA dropout rate"}
     )
+    use_ddp: bool = field(
+        default=False,
+        metadata={"help": "Use DistributedDataParallel for training. Eval/predict only runs on rank 0."}
+    )
+    use_fsdp: bool = field(
+        default=False,
+        metadata={"help": "Use FSDP (Fully Sharded Data Parallel) for training. Better memory efficiency than DDP."}
+    )
+    bf16_master_weights: bool = field(
+        default=False,
+        metadata={"help": "Use fp32 master weights with bf16 training for better numerical stability."}
+    )
 
 
 @dataclass
@@ -234,6 +246,9 @@ class DataTrainingArguments:
                 "needs to be the target language token (Usually it is the target language token)"
             )
         },
+    )
+    stop_epochs: int = field(
+        default=1000
     )
 
 
