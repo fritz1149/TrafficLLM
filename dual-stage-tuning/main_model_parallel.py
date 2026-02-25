@@ -224,9 +224,11 @@ def generate_predictions(model, tokenizer, dataset, data_args, max_new_tokens, b
         labels = [item["labels"] for item in batch]
         return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": labels}
 
+    logger.info(f"Note: batch_size forced to 1 for generation (original: {batch_size})")
+
     dataloader = DataLoader(
         dataset,
-        batch_size=batch_size,
+        batch_size=1,
         shuffle=False,
         collate_fn=collate_fn,
         num_workers=0,
@@ -269,18 +271,17 @@ def single_input_test(model, tokenizer, data_args, max_new_tokens, input_text):
     QWENVL_PAD_TOKEN = tokenizer.special_tokens_map.get("pad_token", None)
     assert QWENVL_PAD_TOKEN is not None
     QWENVL_PAD_ID = tokenizer.convert_tokens_to_ids([QWENVL_PAD_TOKEN])[0]
+    print(f"[single_input_test] PAD_TOKEN: {QWENVL_PAD_TOKEN}, PAD_ID: {QWENVL_PAD_ID}, pad_token_id: {tokenizer.pad_token_id}")
 
     query = f"<|im_start|>user\n{input_text}<|im_end|>\n<|im_start|>assistant\n"
     input_ids = tokenizer.encode(query)
     origin_len = len(input_ids)
     pad_len = data_args.max_source_length - origin_len
-    if pad_len < 0:
-        print(f"[WARNING] input length {origin_len} exceeds max_source_length {data_args.max_source_length}, truncating.")
-        input_ids = input_ids[-data_args.max_source_length:]
-        pad_len = 0
-        origin_len = len(input_ids)
-    input_ids_padded = [QWENVL_PAD_ID] * pad_len + input_ids
-    attention_mask = [0] * pad_len + [1] * origin_len
+    assert pad_len >= 0
+    # input_ids_padded = [QWENVL_PAD_ID] * pad_len + input_ids
+    # attention_mask = [0] * pad_len + [1] * origin_len
+    input_ids_padded = input_ids
+    attention_mask = [1] * origin_len
 
     input_ids_tensor = torch.tensor([input_ids_padded], dtype=torch.long).to("cuda:0")
     attention_mask_tensor = torch.tensor([attention_mask], dtype=torch.long).to("cuda:0")
@@ -511,15 +512,11 @@ def main():
                 input_ids = tokenizer.encode(query)
                 origin_len = len(input_ids)
                 assert origin_len <= data_args.max_source_length
-                pad_len = data_args.max_source_length - origin_len
-                input_ids = [QWENVL_PAD_ID] * pad_len + input_ids
-                attention_mask = [0] * pad_len + [1] * origin_len
+                attention_mask = [1] * origin_len
 
                 answer = f"{answer}<|im_end|>"
                 labels = tokenizer.encode(answer)
                 assert len(labels) <= max_target_length
-                pad_len = max_target_length - len(labels)
-                labels = labels + [QWENVL_PAD_ID] * pad_len
 
                 model_inputs["input_ids"].append(input_ids)
                 model_inputs["attention_mask"].append(attention_mask)
@@ -572,6 +569,15 @@ def main():
         column_names = raw_datasets["eval"].column_names
     elif training_args.do_predict:
         column_names = raw_datasets["test"].column_names
+    elif data_args.single_input_text:
+        single_input_test(
+            model=model,
+            tokenizer=tokenizer,
+            data_args=data_args,
+            max_new_tokens=data_args.max_target_length,
+            input_text=data_args.single_input_text,
+        )
+        return
     else:
         logger.info("Nothing to do. Pass `do_train`, `do_eval` or `do_predict`.")
         return
