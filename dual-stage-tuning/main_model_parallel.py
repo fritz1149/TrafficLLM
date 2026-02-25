@@ -69,46 +69,77 @@ def is_main_process(use_distributed):
 def td_evaluation(predict_responses, target_responses, label_file):
     """
     Evaluation logic from evaluation.py - compute macro metrics.
+    For predictions not in label_dict: the true class is counted as FN,
+    all other classes are counted as TN. The unknown prediction is NOT
+    treated as a separate class in macro averaging.
+    Note: every sample's ground truth is guaranteed to be in label_dict.
     """
     with open(label_file, "r", encoding="utf-8") as fin:
         label_dict = json.load(fin)
 
-    preds_all = []  # 用于accuracy计算（包含无效预测）
-    labels_all = []
-    preds_valid = []  # 用于precision/recall/f1计算（只包含有效预测）
-    labels_valid = []
-    
+    num_classes = len(label_dict)
+    # per-class accumulators: index by label_id
+    tp = [0] * num_classes
+    fp = [0] * num_classes
+    fn = [0] * num_classes
+
+    correct = 0
+    total = len(predict_responses)
+    invalid_count = 0
+
     for predict_response, target_response in zip(predict_responses, target_responses):
         if ' ' in predict_response:
             predict_response = predict_response.split(" ")[-1]
-        label_id = label_dict[target_response]
-        labels_all.append(label_id)
-        
-        if predict_response in label_dict.keys():
+        label_id = label_dict[target_response]  # always valid
+
+        if predict_response in label_dict:
             pred_id = label_dict[predict_response]
-            preds_all.append(pred_id)
-            # 有效预测，加入precision/recall/f1计算
-            preds_valid.append(pred_id)
-            labels_valid.append(label_id)
+            if pred_id == label_id:
+                tp[label_id] += 1
+                correct += 1
+            else:
+                fp[pred_id] += 1
+                fn[label_id] += 1
         else:
-            # 无效预测，只计入accuracy（算作错误）
-            preds_all.append(len(label_dict.keys()))
+            # Unknown prediction: true class is FN, all others are TN
+            fn[label_id] += 1
+            invalid_count += 1
+
+    # Per-class precision / recall / f1
+    per_precision = []
+    per_recall = []
+    per_f1 = []
+    for c in range(num_classes):
+        p = tp[c] / (tp[c] + fp[c]) if (tp[c] + fp[c]) > 0 else 0.0
+        r = tp[c] / (tp[c] + fn[c]) if (tp[c] + fn[c]) > 0 else 0.0
+        f = 2 * p * r / (p + r) if (p + r) > 0 else 0.0
+        per_precision.append(p)
+        per_recall.append(r)
+        per_f1.append(f)
+
+    macro_precision = sum(per_precision) / num_classes if num_classes > 0 else 0.0
+    macro_recall = sum(per_recall) / num_classes if num_classes > 0 else 0.0
+    macro_f1 = sum(per_f1) / num_classes if num_classes > 0 else 0.0
+    accuracy = correct / total if total > 0 else 0.0
 
     metrics = {
-        "accuracy": accuracy_score(labels_all, preds_all),
-        "precision_macro": precision_score(labels_valid, preds_valid, average='macro', zero_division=0) if preds_valid else 0,
-        "recall_macro": recall_score(labels_valid, preds_valid, average='macro', zero_division=0) if preds_valid else 0,
-        "f1_macro": f1_score(labels_valid, preds_valid, average='macro', zero_division=0) if preds_valid else 0,
+        "accuracy": accuracy,
+        "precision_macro": macro_precision,
+        "recall_macro": macro_recall,
+        "f1_macro": macro_f1,
     }
-    
+
+    # Build label name lookup for report
+    id_to_label = {v: k for k, v in label_dict.items()}
     print("acc:", metrics["accuracy"])
     print("precision:", metrics["precision_macro"])
     print("recall:", metrics["recall_macro"])
     print("f1:", metrics["f1_macro"])
-    print("confusion matrix:\n", confusion_matrix(labels_valid, preds_valid) if preds_valid else "No valid predictions")
-    print("classification report:\n", classification_report(labels_valid, preds_valid, zero_division=0) if preds_valid else "No valid predictions")
-    print(f"invalid predictions: {len(preds_all) - len(preds_valid)} / {len(preds_all)}")
-    
+    print("per-class metrics:")
+    for c in range(num_classes):
+        print(f"  {id_to_label.get(c, c)}: precision={per_precision[c]:.4f}  recall={per_recall[c]:.4f}  f1={per_f1[c]:.4f}  tp={tp[c]}  fp={fp[c]}  fn={fn[c]}")
+    print(f"invalid predictions: {invalid_count} / {total}")
+
     return metrics
 
 
@@ -218,6 +249,7 @@ def generate_predictions(model, tokenizer, dataset, data_args, max_new_tokens, b
                 max_new_tokens=max_new_tokens,
                 do_sample=False,
                 pad_token_id=tokenizer.pad_token_id,
+                use_cache=True,
             )
 
         for i in range(outputs.shape[0]):
@@ -227,6 +259,54 @@ def generate_predictions(model, tokenizer, dataset, data_args, max_new_tokens, b
             predictions.append(pred_text)
     
     return predictions, targets
+
+
+def single_input_test(model, tokenizer, data_args, max_new_tokens, input_text):
+    """
+    对单条用户输入文本执行一次生成测试。
+    使用与 preprocess_function_eval 相同的数据处理逻辑。
+    """
+    QWENVL_PAD_TOKEN = tokenizer.special_tokens_map.get("pad_token", None)
+    assert QWENVL_PAD_TOKEN is not None
+    QWENVL_PAD_ID = tokenizer.convert_tokens_to_ids([QWENVL_PAD_TOKEN])[0]
+
+    query = f"<|im_start|>user\n{input_text}<|im_end|>\n<|im_start|>assistant\n"
+    input_ids = tokenizer.encode(query)
+    origin_len = len(input_ids)
+    pad_len = data_args.max_source_length - origin_len
+    if pad_len < 0:
+        print(f"[WARNING] input length {origin_len} exceeds max_source_length {data_args.max_source_length}, truncating.")
+        input_ids = input_ids[-data_args.max_source_length:]
+        pad_len = 0
+        origin_len = len(input_ids)
+    input_ids_padded = [QWENVL_PAD_ID] * pad_len + input_ids
+    attention_mask = [0] * pad_len + [1] * origin_len
+
+    input_ids_tensor = torch.tensor([input_ids_padded], dtype=torch.long).to("cuda:0")
+    attention_mask_tensor = torch.tensor([attention_mask], dtype=torch.long).to("cuda:0")
+
+    model.eval()
+    with torch.no_grad():
+        outputs = model.generate(
+            input_ids=input_ids_tensor,
+            attention_mask=attention_mask_tensor,
+            max_new_tokens=max_new_tokens,
+            do_sample=False,
+            pad_token_id=tokenizer.pad_token_id,
+            use_cache=True,
+        )
+
+    generated_ids = outputs[0][input_ids_tensor.shape[1]:]
+    pred_text = tokenizer.decode(generated_ids, skip_special_tokens=True)
+    pred_text = pred_text.replace("<|im_end|>", "").strip()
+
+    print("=" * 60)
+    print("[single_input_test] Input:")
+    print(input_text)
+    print("[single_input_test] Output:")
+    print(pred_text)
+    print("=" * 60)
+    return pred_text
 
 
 def main():
@@ -823,7 +903,16 @@ def main():
         #         tokenizer.save_pretrained(output_dir)
         #         logger.info(f"Model saved to {output_dir}")
 
-    if not training_args.do_train:
+    if getattr(data_args, "single_input_text", None) is not None:
+        logger.info("Running single input test...")
+        single_input_test(
+            model=model,
+            tokenizer=tokenizer,
+            data_args=data_args,
+            max_new_tokens=data_args.max_target_length,
+            input_text=data_args.single_input_text,
+        )
+    elif not training_args.do_train:
         use_distributed = use_ddp or use_fsdp
         if is_main_process(use_distributed):
             run_eval_predict()

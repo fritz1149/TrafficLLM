@@ -250,10 +250,16 @@ class DataTrainingArguments:
     stop_epochs: int = field(
         default=1000
     )
+    single_input_text: Optional[str] = field(
+        default=None,
+        metadata={"help": "If set, run a single generation test with this text and exit. Skips training/eval."}
+    )
 
 
 
     def __post_init__(self):
+        if self.single_input_text is not None:
+            return
         if self.dataset_name is None and self.train_file is None and self.validation_file is None and self.test_file is None:
             raise ValueError("Need either a dataset name or a training/validation/test file.")
         else:
